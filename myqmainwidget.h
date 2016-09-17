@@ -40,23 +40,24 @@ public slots:
     void slot_openRegisterDialog();
 
 private:
+    //核心：QGraphicsView类
     MyQGraphicsView *myQGraphicsView;
     MyQGraphicsScene *myQGraphicsScene;
 
     QVector<QPointF> vectorStandard;
-    //摄像机列表
+    //切分结点/摄像机列表
     QList<CuttingNode*> cuttingNodeList;
+    //重组结点列表
     QList<RecombinationNode*>recombinationNodeList;
     //显示摄像机列表的控件
     QListWidget *cameraListWidget;
-
-    //映射Camera对象和对应的PolygonItem对象
+    //Camera对象和对应的PolygonItem对象的映射
     QHash<CuttingNode*,QGraphicsPolygonItem*> cameraToGraphicsItemMap;
     QHash<CuttingNode*,QListWidgetItem*> cameraToListWidgetItemMap;
 
     CuttingNode* cameraEntered;
     CuttingNode* cameraSelected;
-
+    //网络管理器
     QNetworkAccessManager * m_pManager;
 
     QNetworkRequest networkPutRequest;
@@ -64,15 +65,18 @@ private:
 
     QNetworkReply * cuttingNoteReply;
     QNetworkReply * recombinationNodeReply;
+    //主机IP地址
     QString m_host;
 
     QString recombinationNodeUrl;
 
     QTimer* m_pTimer; //请求超时计时器
-    void addItems();
+
     QRectF intersectRect(QRectF rect1, QRectF rect2);
     QPointF tvToMonitor(QPointF inPoint, int id);
     QVector<QPointF> translateById(QVector<QPointF>,int id);
+
+    void addItems();
 
 };
 
