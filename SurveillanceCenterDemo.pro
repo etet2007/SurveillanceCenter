@@ -16,8 +16,8 @@ TARGET = SurveillanceCenterDemo
 TEMPLATE = app
 
 
-INCLUDEPATH +=    E:\Workspace\VisualStudioWorkspace\ClientDLL\ClientDLL \
-                    G:\curl-7.40.0-devel-mingw64\include
+#INCLUDEPATH +=    E:\Workspace\VisualStudioWorkspace\ClientDLL\ClientDLL
+
 #源文件
 SOURCES += main.cpp\
     myqgraphicsscene.cpp \
@@ -39,10 +39,6 @@ HEADERS  += \
     boundary.h
 
 #静态库
-LIBS += G:\curl-7.40.0-devel-mingw64\lib64\libssh2.lib \
-G:\curl-7.40.0-devel-mingw64\lib64\libcurl.lib \
-E:\Workspace\VisualStudioWorkspace\ClientDLL\x64\Debug\ClientDLL.lib \
-ws2_32.lib \
-wldap32.lib
+LIBS += ClientDLL.lib
 
 

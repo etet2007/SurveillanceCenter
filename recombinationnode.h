@@ -4,6 +4,8 @@
 #include<QString>
 #include<QList>
 #include<QPointF>
+
+//重组节点类
 class RecombinationNode
 {
 public:

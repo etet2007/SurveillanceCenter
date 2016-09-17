@@ -2,13 +2,11 @@
 #define MYQMAINWINDOW_H
 
 #include <QMainWindow>
-
-
+#include<QNetworkRequest>
 #include "cuttingNode.h"
 
-class RecombinationNode;
-#include<QNetworkRequest>
 //前置声明
+class RecombinationNode;
 class QGraphicsPolygonItem;
 class MyQGraphicsView;
 class MyQGraphicsScene;
@@ -18,6 +16,7 @@ class QNetworkAccessManager;
 //class QNetworkRequest;
 class QListWidget;
 
+//主控件类
 class MyQMainWidget : public QWidget
 {
     Q_OBJECT
@@ -28,10 +27,8 @@ public:
 
 static int table[30];
 
-
-
 signals:
-
+//槽函数
 public slots:
     void slot_requestData();
     void slot_itemEntered(QListWidgetItem* current);
@@ -41,6 +38,7 @@ public slots:
     void slot_replyFinished(QNetworkReply *);
     void slot_upLoadData();
     void slot_openRegisterDialog();
+
 private:
     MyQGraphicsView *myQGraphicsView;
     MyQGraphicsScene *myQGraphicsScene;
