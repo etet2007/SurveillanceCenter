@@ -10,10 +10,8 @@ class RecombinationNode;
 class QGraphicsPolygonItem;
 class MyQGraphicsView;
 class MyQGraphicsScene;
-
 class QNetworkReply;
 class QNetworkAccessManager;
-//class QNetworkRequest;
 class QListWidget;
 
 //主控件类
