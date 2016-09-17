@@ -73,7 +73,9 @@ private:
     QTimer* m_pTimer; //请求超时计时器
     void addItems();
     QRectF intersectRect(QRectF rect1, QRectF rect2);
-    QPointF viewToMonitor(int id,QPointF inPoint);
+    QPointF tvToMonitor(QPointF inPoint, int id);
+    QVector<QPointF> translateById(QVector<QPointF>,int id);
+
 };
 
 

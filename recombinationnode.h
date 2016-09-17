@@ -27,12 +27,17 @@ public:
     QString getReceivedListString();
 
     void clearReceivedListAndPosition();
+    QString getFourPointsList() const;
+
 private:
     int m_id;  //id编号
     QString m_ip;//重组节点ip地址
 
     QList<QString> m_receivedList; //存储切分节点ip  顺序不是固定的
-    QString m_position;
+
+    QString m_position;//不用
+    QString fourPointsList;
+
 };
 
 #endif // RECOMBINATIONNODE_H

@@ -78,6 +78,11 @@ void RecombinationNode::clearReceivedListAndPosition()
     m_receivedList.clear();
     m_position.clear();
 }
+QString RecombinationNode::getFourPointsList() const
+{
+    return fourPointsList;
+}
+
 
 
 

@@ -53,8 +53,6 @@ void MyQGraphicsView::readBackgroundPic()
 
     backgroundImage.load( "G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\background.bmp" );
 
-//    backgroundPic.load("G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\background.bmp");//原来直接使用QPixmap进行读取
-
     backgroundPic= QPixmap::fromImage( backgroundImage);//这里可以控制QImage转换成显示Pixmap的尺度
     if(backgroundPic.isNull()){
     qDebug("empty");
@@ -183,18 +181,12 @@ void MyQGraphicsView::drawBackground(QPainter *painter, const QRectF &rect)
     //sceneRect This property holds the area of the scene visualized by this view.
     painter->drawPixmap(int(sceneRect().left()),int(sceneRect().top()), backgroundPic);//画出背景图
 
-    //test what is rect
-//    qreal x=rect.x();
-//    qreal y=rect.y();
-//    qDebug("x"+QString::number(x).toLatin1());
-//    qDebug("y"+QString::number(y).toLatin1());
-//    qreal w=rect.width();
-//    qreal h=rect.height();
-//    qDebug("w"+QString::number(w).toLatin1());
-//    qDebug("h"+QString::number(h).toLatin1());
-//    painter->drawRect(rect);
+    //qDebug()<<transform();
+    qDebug()<<viewportTransform();
+    qDebug()<<viewportTransform().inverted();
 
-
+    qDebug()<<mapFromScene(100,100);
+//    qDebug()<<matrix();
 
 }
 

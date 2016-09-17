@@ -117,7 +117,6 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
     openRegisterDialog->setText("图像配准");
     connect(openRegisterDialog, SIGNAL(clicked(bool)), this, SLOT(slot_openRegisterDialog()));
 
-
 //!设置控件的Layout
     //水平Layout 加入view和mainGroupBox
     QHBoxLayout *viewLayout = new QHBoxLayout(this);
@@ -151,16 +150,21 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
     m_pManager=new QNetworkAccessManager(this); //QNetworkAccessManager
     connect(m_pManager,SIGNAL(finished(QNetworkReply*)),this,SLOT(slot_replyFinished(QNetworkReply*)));
 
-//    m_pTimer = new QTimer;
 
     //fake
-//    for(int i=1;i<=12;i++){
-//        RecombinationNode *recombinationNode=new RecombinationNode();
-//        recombinationNode->setId(i);
-//        recombinationNodeList.append(recombinationNode);
-//    }
-    m_host="http://192.168.153.209:8001/";
+    for(int i=1;i<=12;i++){
+        RecombinationNode *recombinationNode=new RecombinationNode();
+        recombinationNode->setId(i);
+        recombinationNodeList.append(recombinationNode);
+    }
+    m_host="http://192.168.153.116:8001/";
 
+    QVector<QPointF> input(0);
+    QVector<QPointF> output(0);
+
+    input <<QPointF(100,100);
+    output=translateById(input,4);
+    qDebug() << output;
 }
 
 MyQMainWidget::~MyQMainWidget()
@@ -175,7 +179,6 @@ void MyQMainWidget::slot_requestData()
     //每次都清空存储的列表, 如果要清空，list map scene listwidget都要清空
     cuttingNodeList.clear();//不知道会不会释放里面camera对象的内存
     recombinationNodeList.clear();
-
     cameraToGraphicsItemMap.clear();
     cameraToListWidgetItemMap.clear();
     myQGraphicsScene->clear();
@@ -200,12 +203,12 @@ void MyQMainWidget::slot_requestData()
     recombinationNodeReply=m_pManager->get(recombinationNodeRequest);
 
     //测试收到如下坐标的四边形，转到Camera对象中
-//    QVector<QPointF> vectorTest(0);
-//    QPointF p1(400,0);
-//    QPointF p2(500,0);
-//    QPointF p3(500,200);
-//    QPointF p4(200,200);
-//    vectorTest<<p1<<p2<<p3<<p4;
+    QVector<QPointF> vectorTest(0);
+    QPointF p1(400,0);
+    QPointF p2(500,0);
+    QPointF p3(500,200);
+    QPointF p4(200,200);
+    vectorTest<<p1<<p2<<p3<<p4;
 
 //    CuttingNode *camera1=new CuttingNode(1,"192",vectorTest);
 
@@ -237,7 +240,7 @@ void MyQMainWidget::slot_requestData()
 
 //    cuttingNodeList<<camera1<<camera2;
 
-//    addItems();
+    addItems();
 
 //    qDebug()<<camera1->getPolygonItem()->collidesWithItem(camera2->getPolygonItem(),Qt::IntersectsItemShape);
 //    qDebug()<<camera1->getPolygonItem()->collidesWithItem(camera2->getPolygonItem(),Qt::IntersectsItemBoundingRect);
@@ -293,8 +296,8 @@ void MyQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem 
 }
 
 //!计算拓扑信息
-void MyQMainWidget::slot_getTopologicalStructureData()
-{
+void MyQMainWidget::slot_getTopologicalStructureData(){
+
     //需要先清空重组节点append的数据。
  for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
     RecombinationNode* recombinationNodeTemp=iterator.next();
@@ -303,7 +306,6 @@ void MyQMainWidget::slot_getTopologicalStructureData()
 
     //对于每个相机、和切分节点都运算一次。
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
-
         CuttingNode* cuttingNodeTemp=iterator.next();
 
         //!算法输入数据：摄像机的世界坐标系标定坐标  QVector<QPointF> areaWorld
@@ -316,9 +318,8 @@ void MyQMainWidget::slot_getTopologicalStructureData()
             QPointF pTemp=myQGraphicsView->mapFromScene(areaWorld.at(i));
             areaObserve<<pTemp;
         }
-
-        //!转换成电视墙大坐标系 QVector<QPointF> areaTV(0)
-        //摄像机的标定坐标 电视墙坐标系
+        //!转换成拼接屏坐标系 QVector<QPointF> areaTV(0)
+        //摄像机的标定坐标 电视墙坐标系 即为id=1的拼接屏坐标
         QVector<QPointF> areaTV(0);
         for (int i = 0; i < areaObserve.size(); ++i) {
             QPointF pTemp=areaObserve.at(i);
@@ -327,32 +328,7 @@ void MyQMainWidget::slot_getTopologicalStructureData()
             areaTV<<pTemp;
         }
 
-        //! 计算投影变换矩阵
-        //求出标准摄像机图片到观察坐标系下四点坐标的投影变换矩阵result
-        QTransform transformMat;
         QPolygonF polygonareaTV(areaTV);
-        QPolygonF polygonStandard(vectorStandard);
-        QTransform::quadToQuad(polygonStandard,polygonareaTV,transformMat);
-        cuttingNodeTemp->setTransformMat(transformMat);
-        /*//调试代码
-        qDebug()<<QString::number(transformMat.m11()).toLatin1()<<QString::number(transformMat.m12()).toLatin1()<<
-                  QString::number(transformMat.m13()).toLatin1()<<"\n"<<QString::number(transformMat.m21()).toLatin1()<<
-                  QString::number(transformMat.m22()).toLatin1()<<QString::number(transformMat.m23()).toLatin1()<<"\n"<<
-                  QString::number(transformMat.m31()).toLatin1()<<QString::number(transformMat.m32()).toLatin1()<<
-                  QString::number(transformMat.m33()).toLatin1();
-                  */
-
-        //!添加图片
-//        QTransform transformMat2;
-//       // transformMat2.setMatrix(3.1894209701702181e-001,-3.6483635059433439e-001,5.5476766212957773e+002,-6.0977370239185014e-001,-8.5445514431068315e-001,3.0466756293049680e+003,-1.9137095752773869e-004,-4.3017298410226402e-004,1);
-//        QTransform::quadToQuad(polygonStandard,cuttingNodeTemp->getPolygonItem()->polygon(),transformMat2);
-
-//        QPixmap pixmap;
-//        pixmap.load("C:\\Users\\Administrator\\Web\\CaptureFiles\\2016-06-04\\192.168.2.31_01_201606041119004.jpg");
-//        QGraphicsPixmapItem *pixmapItem=myQGraphicsScene->addPixmap(pixmap);
-//        pixmapItem->setTransform(transformMat2);
-
-
         //!计算切分节点的切分坐标 segmentXModelList segmentYModelList基于模型坐标，可能为空
         //显示范围的外围矩形
         QRectF polygonAreaRect=polygonareaTV.boundingRect();
@@ -384,32 +360,7 @@ void MyQMainWidget::slot_getTopologicalStructureData()
         }
         cuttingNodeTemp->setCuttingXModelList(segmentXModelList);
         cuttingNodeTemp->setCuttingYModelList(cuttingYModelList);
-        /*//测试代码
-//        for(QListIterator<qreal> ListIterator(segmentXModelList);ListIterator.hasNext();){
-//             qDebug()<<QString::number(ListIterator.next()).toLatin1();
-//        }
-//        for(QListIterator<qreal> ListIterator(segmentYModelList);ListIterator.hasNext();){
-//             qDebug()<<QString::number(ListIterator.next()).toLatin1();
-//        }
 
-//        for(QListIterator<int> segmentXListIterator(segmentXTvList);segmentXListIterator.hasNext();){
-//             qDebug()<<QString::number(segmentXListIterator.next()).toLatin1();
-//        }
-//        for(QListIterator<int> segmentYListIterator(segmentYTvList);segmentYListIterator.hasNext();){
-//            qDebug()<<QString::number(segmentYListIterator.next()).toLatin1();
-//        }*/
-
-
-        //!计算矩形重叠区域信息
-        QList<QGraphicsItem *> graphicsItemCollidingList;
-        graphicsItemCollidingList=cuttingNodeTemp->getPolygonItem()->collidingItems();//IntersectsItemBoundingRect
-        for(int i=0;i<graphicsItemCollidingList.size();i++){
-            qDebug()<<graphicsItemCollidingList.at(i);
-        }
-
-
-
-        //!计算切分节点拓扑信息 输入:插入x(01234) 插入y(0123)  row column
         QList<int> mat;
         // segmentYTvList.size()+1 * segmentXTvList.size()+1 的mat
         int matrixRow=cuttingYTvList.size()+1;
@@ -481,65 +432,29 @@ void MyQMainWidget::slot_getTopologicalStructureData()
         cuttingNodeTemp->setMatrixCol(matrixCol);
         cuttingNodeTemp->setMatrixRow(matrixRow);
 
-        /*//测试代码
-        QString out="";
-        for(QListIterator<int> matIterator(mat);matIterator.hasNext();){
-            out.append(QString::number(matIterator.next()).toLatin1());
+        qDebug()<<mat;
+        //!有覆盖的重组节点处加入信息
+        for(int i=0;i<mat.size();i++){
+            int idFromMat= mat[i];
+            RecombinationNode* recombinationNodeTemp=recombinationNodeList[idFromMat-1]; //现在逐个取出全部重组节点
+            recombinationNodeTemp->appendReceivedList(cuttingNodeTemp->getIp());//加入摄像机IP
 
-            if(matIterator.hasNext())
-                out.append(" "); //添加空格
-        }
-        qDebug()<<out;*/
-
-        //!转换成重组节点拓扑信息
-        //遍历切分节点拓扑信息mat
-        for(QListIterator<int> matIterator(mat);matIterator.hasNext();){
-            int next=matIterator.next();
-            if(next==0){
-                continue;
-            }
-            RecombinationNode* recombinationNodeTemp;
-            recombinationNodeTemp=recombinationNodeList.at(next-1);//
-            recombinationNodeTemp->appendReceivedList(cuttingNodeTemp->getIp());
+            QVector<QPointF> fourPoints=translateById(areaTV,idFromMat);
+            qDebug()<<fourPoints;
         }
 
-        //!计算位置信息：对于每一个重组节点，需要计算每个切分块在对应单块电视墙当中的坐标位置
-
-        QPointF positionPoint;
-        for(int i=0;i<matrixRow;i++){
-            for(int j=0;j<matrixCol;j++){
-                int inWhichRecNode=mat.at(i*matrixCol+j); //mat为切分节点拓扑信息
-                if(inWhichRecNode==0){
-                    continue;
-                }
-                RecombinationNode *recombinationNodeTemp=recombinationNodeList.at(inWhichRecNode-1);
-                //id to col row
-                int row=(inWhichRecNode-1)/4+1;
-                int col=inWhichRecNode%4;
-
-                if(i==0&&j==0){//矩阵的第一行第一列
-                    positionPoint.setX(polygonAreaRectTopLeftX);
-                    positionPoint.setY(polygonAreaRectTopLeftY);
-                }else if(i==0){//第一行其余
-                    positionPoint.setX(0);
-                    positionPoint.setY(polygonAreaRectTopLeftY);
-                }else if(j==0){//第一列其余
-                    positionPoint.setX(polygonAreaRectTopLeftX);
-                    positionPoint.setY(0);
-                }else{
-                    positionPoint.setX(0);
-                    positionPoint.setY(0);
-                }
-
-                qDebug()<<inWhichRecNode;
-//                qDebug()<<positionPoint;
-                recombinationNodeTemp->appendPosition(viewToMonitor(inWhichRecNode,positionPoint));
-            }
-
-        }
 
     }//遍历切分节点循环结束。
 
+}
+QVector<QPointF> MyQMainWidget::translateById(QVector<QPointF> areaTv,int id){
+    QVector<QPointF> translatePoints(0);
+    for(int i=0;i<areaTv.size();i++){
+        QPointF pointF=areaTv[i];
+        QPointF ans=tvToMonitor(pointF,id);
+        translatePoints<<ans;
+    }
+    return translatePoints;
 }
 
 void MyQMainWidget::slot_uploadBackgroundImage()
@@ -805,16 +720,16 @@ QRectF MyQMainWidget::intersectRect(QRectF rect1,QRectF rect2)
     return QRectF(topLeftX,topLeftY,width,height);
 }
 
-QPointF MyQMainWidget::viewToMonitor(int id, QPointF inPoint)
+QPointF MyQMainWidget::tvToMonitor(QPointF inPoint,int id)
 {
     qreal x=inPoint.x();
     qreal y=inPoint.y();
     QPointF ans;
     //id to col row
     int row=(id-1)/4+1;
-    int col=id%4;
+    int col=(id-1)%4+1;
 
-    if(x!=0)
+    if(x!=0)//0是交界
     ans.setX(x - myQGraphicsView->verticalLineList.at(col-1));
     if(y!=0)
     ans.setY(y- myQGraphicsView->horizontalLineList.at(row-1));
