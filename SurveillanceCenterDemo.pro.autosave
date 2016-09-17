@@ -35,7 +35,7 @@ HEADERS  += \
     myqgraphicspolygonitem.h \
     cuttingNode.h \
     recombinationnode.h\
-    ClientDLL.h \
+    ClientD LL.h \
     boundary.h
 
 #静态库
