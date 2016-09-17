@@ -10,10 +10,8 @@ class RecombinationNode;
 class QGraphicsPolygonItem;
 class MyQGraphicsView;
 class MyQGraphicsScene;
-
 class QNetworkReply;
 class QNetworkAccessManager;
-//class QNetworkRequest;
 class QListWidget;
 
 //主控件类
@@ -66,7 +64,7 @@ private:
     QNetworkReply * cuttingNoteReply;
     QNetworkReply * recombinationNodeReply;
     //主机IP地址
-    QString m_host;
+    QString m_host="http://192.168.153.116:8001/";
 
     QString recombinationNodeUrl;
 

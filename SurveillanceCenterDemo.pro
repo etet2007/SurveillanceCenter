@@ -16,8 +16,8 @@ TARGET = SurveillanceCenterDemo
 TEMPLATE = app
 
 
-#INCLUDEPATH +=    E:\Workspace\VisualStudioWorkspace\ClientDLL\ClientDLL
-
+INCLUDEPATH +=    E:\Workspace\VisualStudioWorkspace\ClientDLL\ClientDLL \
+                    $$PWD\lib\includePath
 #源文件
 SOURCES += main.cpp\
     myqgraphicsscene.cpp \
@@ -27,10 +27,10 @@ SOURCES += main.cpp\
     cuttingNode.cpp \
     recombinationnode.cpp \
     boundary.cpp
+
 #头文件
-HEADERS  += \
-    myqgraphicsscene.h \
-    myqgraphicsview.h \
+HEADERS  +=myqgraphicsscene.h \
+ myqgraphicsview.h \
     myqmainwidget.h \
     myqgraphicspolygonitem.h \
     cuttingNode.h \
@@ -39,6 +39,8 @@ HEADERS  += \
     boundary.h
 
 #静态库
-LIBS += $$PWD/ClientDLL.lib
-
-
+LIBS += $$PWD\lib\libssh2.lib \
+$$PWD\lib\libcurl.lib \
+$$PWD\lib\ClientDLL.lib \
+ws2_32.lib \
+wldap32.lib
