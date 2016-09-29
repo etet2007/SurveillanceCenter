@@ -23,12 +23,18 @@ INCLUDEPATH +=    E:\Workspace\VisualStudioWorkspace\ClientDLL\ClientDLL \
 SOURCES += main.cpp\
     cuttingNode.cpp \
     recombinationnode.cpp \
-    boundary.cpp
+    boundary.cpp \
+myqgraphicsview.cpp \
+myqgraphicsscene.cpp \
+myqmainwidget.cpp
 
 #头文件
 HEADERS  += \
+    cuttingNode.h \
+    recombinationnode.h\
     myqgraphicsscene.h \
     myqgraphicsview.h \
+    myqmainwidget.h \
     ClientDLL.h \
     boundary.h
 
