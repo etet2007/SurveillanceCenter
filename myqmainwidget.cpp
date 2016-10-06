@@ -37,11 +37,11 @@ int MyQMainWidget::table[]={0,0,0,0,0,0,
 
 MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
 {
+    //设置窗口大小、标题
     setWindowState(Qt::WindowMaximized);
     setWindowTitle("Surveillance Center");
-    //创建myQGraphicsScene对象， 父控件释放后会自动释放
+    //初始化myQGraphicsScene，父控件释放后会自动释放
     myQGraphicsScene=new MyQGraphicsScene();
-
     //初始化myQGraphicsView
     myQGraphicsView=new MyQGraphicsView(myQGraphicsScene);
     myQGraphicsView->setParent(this);//可以自动内存释放
@@ -147,24 +147,17 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
     connect(cameraListWidget,SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),this,SLOT(slot_itemSelected(QListWidgetItem*, QListWidgetItem*)));
     connect(cameraListWidget,SIGNAL(itemEntered(QListWidgetItem*)),this,SLOT(slot_itemEntered(QListWidgetItem*)));
 
+    //初始化网络连接管理器
     m_pManager=new QNetworkAccessManager(this); //QNetworkAccessManager
     connect(m_pManager,SIGNAL(finished(QNetworkReply*)),this,SLOT(slot_replyFinished(QNetworkReply*)));
 
-
-    //fake
+    //人造重组节点
     for(int i=1;i<=12;i++){
         RecombinationNode *recombinationNode=new RecombinationNode();
         recombinationNode->setId(i);
         recombinationNodeList.append(recombinationNode);
     }
-    m_host="http://192.168.153.116:8001/";
 
-    QVector<QPointF> input(0);
-    QVector<QPointF> output(0);
-
-    input <<QPointF(100,100);
-    output=translateById(input,4);
-    qDebug() << output;
 }
 
 MyQMainWidget::~MyQMainWidget()
