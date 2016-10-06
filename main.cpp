@@ -5,7 +5,7 @@
 #include "myqmainwidget.h"
 
 //#include<QTextCodec>
-#include"recombinationnode.h"
+#include"recombinationNode.h"
 
 
 int main(int argc, char *argv[])

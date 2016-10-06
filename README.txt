@@ -1,0 +1,4 @@
+程序结构：
+main.cpp：程序入口。使用QApplication对象设定字体，显示程序主页面对象MyQMainWidget。
+cuttingNode类：切分节点模型类。
+recombinationNode：重组节点模型类。

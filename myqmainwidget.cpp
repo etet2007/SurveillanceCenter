@@ -17,7 +17,7 @@
 #include <QProcess>
 #include <QProgressDialog>
 #include "boundary.h"
-#include "recombinationnode.h"
+#include "recombinationNode.h"
 
 #include "ClientDLL.h"
 
