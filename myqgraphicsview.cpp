@@ -181,13 +181,6 @@ void MyQGraphicsView::drawBackground(QPainter *painter, const QRectF &rect)
     //sceneRect This property holds the area of the scene visualized by this view.
     painter->drawPixmap(int(sceneRect().left()),int(sceneRect().top()), backgroundPic);//画出背景图
 
-    //qDebug()<<transform();
-    qDebug()<<viewportTransform();
-    qDebug()<<viewportTransform().inverted();
-
-    qDebug()<<mapFromScene(100,100);
-//    qDebug()<<matrix();
-
 }
 
 void MyQGraphicsView::initBoundary(){

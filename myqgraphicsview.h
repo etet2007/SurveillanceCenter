@@ -11,21 +11,23 @@ class MyQGraphicsView : public QGraphicsView
     Q_OBJECT
 public:
     MyQGraphicsView(MyQGraphicsScene *scene);
-//生成区域范围字符串
+//生成可视区域范围字符串
     QString getViewArea();
 //常量
+    //视口分辨率
     static const int viewHeight=675;
     static const int viewWidth=1600;
-
+    //电视墙分辨率
     static const int tvHeight=3240;
     static const int tvWidth=7680;
 
     float ratio=4.8;
+
 //已经将下放的常量放入列表当中
     QList<int>  verticalLineList;
     QList<int>  horizontalLineList;
 
-    //电视墙坐标系 转换为观察坐标系用比例变换
+    //电视墙坐标系下转换为观察坐标系用比例变换
     static const int verticalLine1=0;
     static const int verticalLine2=1920;
     static const int verticalLine3=3840;
@@ -75,7 +77,6 @@ private:
 
     QPoint verticalLine2topView;
     QPoint verticalLine2ButtonView;
-
 
     QPoint verticalLine3topView;
     QPoint verticalLine3ButtonView;

@@ -22,7 +22,7 @@ public:
     //声明为explicit的构造函数不能在隐式转换中使用。
     explicit MyQMainWidget(QWidget *parent = 0);
     ~MyQMainWidget();
-
+    //电视墙排列
 static int table[30];
 
 signals:
@@ -37,41 +37,46 @@ public slots:
     void slot_upLoadData();
     void slot_openRegisterDialog();
 
+    void slot_readyRead();
 private:
     //核心：QGraphicsView类
     MyQGraphicsView *myQGraphicsView;
     MyQGraphicsScene *myQGraphicsScene;
-
+    //1920*1080数组
     QVector<QPointF> vectorStandard;
-    //切分结点/摄像机列表
+    //切分节点/摄像机列表
     QList<CuttingNode*> cuttingNodeList;
-    //重组结点列表
+    //重组节点列表
     QList<RecombinationNode*>recombinationNodeList;
-    //显示摄像机列表的控件
+    //显示切分节点/摄像机列表的控件
     QListWidget *cameraListWidget;
+    CuttingNode* cuttingNodeEntered;
+    CuttingNode* cuttingNodeSelected;
+
     //Camera对象和对应的PolygonItem对象的映射
     QHash<CuttingNode*,QGraphicsPolygonItem*> cameraToGraphicsItemMap;
     QHash<CuttingNode*,QListWidgetItem*> cameraToListWidgetItemMap;
 
-    CuttingNode* cameraEntered;
-    CuttingNode* cameraSelected;
     //网络管理器
     QNetworkAccessManager * m_pManager;
 
     QNetworkRequest networkPutRequest;
     QNetworkReply * networkPutReply;
-
     QNetworkReply * cuttingNoteReply;
     QNetworkReply * recombinationNodeReply;
+
     //主机IP地址
-    QString m_host="http://192.168.153.116:8001/";
+    QString m_host="http://192.168.153.148:8001/";
 
     QString recombinationNodeUrl;
 
     QTimer* m_pTimer; //请求超时计时器
 
+    //计算矩形相交区域
     QRectF intersectRect(QRectF rect1, QRectF rect2);
+    //电视墙坐标系转换为单元屏坐标系
     QPointF tvToMonitor(QPointF inPoint, int id);
+
     QVector<QPointF> translateById(QVector<QPointF>,int id);
 
     void addItems();

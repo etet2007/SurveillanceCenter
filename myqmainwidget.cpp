@@ -20,8 +20,7 @@
 #include "recombinationNode.h"
 
 #include "ClientDLL.h"
-
-#include <QMediaPlayer>
+//#include <QMediaPlayer>
 #include <QGraphicsVideoItem>
 
 #if _MSC_VER >= 1600
@@ -92,7 +91,7 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
 
     connect(queryButton, SIGNAL(clicked(bool)), this, SLOT(slot_requestData()));
 
-    //摄像机参数列表~~~~~~~~~~~~~
+    //摄像机参数列表
     cameraListWidget = new QListWidget(mainGroupBox);
     cameraListWidget->setMouseTracking(true);
 
@@ -140,18 +139,18 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
     mainGroupLayout->addWidget(calcButton);
     mainGroupLayout->addWidget(uploadDataButton);
 
-
     mainGroupLayout->addStretch(1);
     mainGroupLayout->addWidget(resetButton);
 
+
     connect(cameraListWidget,SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),this,SLOT(slot_itemSelected(QListWidgetItem*, QListWidgetItem*)));
-    connect(cameraListWidget,SIGNAL(itemEntered(QListWidgetItem*)),this,SLOT(slot_itemEntered(QListWidgetItem*)));
+    connect(cameraListWidget,SIGNAL(cuttingNodeEntered(QListWidgetItem*)),this,SLOT(slot_itemEntered(QListWidgetItem*)));
 
     //初始化网络连接管理器
     m_pManager=new QNetworkAccessManager(this); //QNetworkAccessManager
     connect(m_pManager,SIGNAL(finished(QNetworkReply*)),this,SLOT(slot_replyFinished(QNetworkReply*)));
 
-    //人造重组节点
+    //测试用重组节点
     for(int i=1;i<=12;i++){
         RecombinationNode *recombinationNode=new RecombinationNode();
         recombinationNode->setId(i);
@@ -168,15 +167,13 @@ MyQMainWidget::~MyQMainWidget()
 //发送全景显示范围，获取数据库中摄像头数据
 void MyQMainWidget::slot_requestData()
 {
-
     //每次都清空存储的列表, 如果要清空，list map scene listwidget都要清空
-    cuttingNodeList.clear();//不知道会不会释放里面camera对象的内存
+    cuttingNodeList.clear();//应手动释放内部存储对象的内存
     recombinationNodeList.clear();
     cameraToGraphicsItemMap.clear();
     cameraToListWidgetItemMap.clear();
     myQGraphicsScene->clear();
     cameraListWidget->clear();
-
 
     //读取全景显示范围      QList<QPointF>存储
     QString areaString=myQGraphicsView->getViewArea();
@@ -189,20 +186,22 @@ void MyQMainWidget::slot_requestData()
 //    qDebug()<<cuttingNodeUrl;
 //    qDebug()<<recombinationNodeUrl;
 
+    //根据URL生产request对象
     QNetworkRequest & cuttingNodeRequest=QNetworkRequest(QUrl(cuttingNodeUrl));
     QNetworkRequest & recombinationNodeRequest=QNetworkRequest(QUrl(recombinationNodeUrl));
     //发送给服务器，等待回应。主线程会异步调用
     cuttingNoteReply=m_pManager->get(cuttingNodeRequest);
     recombinationNodeReply=m_pManager->get(recombinationNodeRequest);
+    connect(cuttingNoteReply,SIGNAL(readyRead()),this,SLOT(slot_readyRead()));
 
+    //测试代码-----
     //测试收到如下坐标的四边形，转到Camera对象中
-    QVector<QPointF> vectorTest(0);
-    QPointF p1(400,0);
-    QPointF p2(500,0);
-    QPointF p3(500,200);
-    QPointF p4(200,200);
-    vectorTest<<p1<<p2<<p3<<p4;
-
+//    QVector<QPointF> vectorTest(0);
+//    QPointF p1(400,0);
+//    QPointF p2(500,0);
+//    QPointF p3(500,200);
+//    QPointF p4(200,200);
+//    vectorTest<<p1<<p2<<p3<<p4;
 //    CuttingNode *camera1=new CuttingNode(1,"192",vectorTest);
 
 //    QVector<QPointF> vectorTest2(0);
@@ -220,7 +219,6 @@ void MyQMainWidget::slot_requestData()
 //    QPointF p3(500,200);
 //    QPointF p4(200,200);
 //    vectorTest<<p1<<p2<<p3<<p4;
-
 //    CuttingNode *camera1=new CuttingNode(1,"192",vectorTest);
 
 //    QVector<QPointF> vectorTest2(0);
@@ -233,31 +231,33 @@ void MyQMainWidget::slot_requestData()
 
 //    cuttingNodeList<<camera1<<camera2;
 
-    addItems();
-
 //    qDebug()<<camera1->getPolygonItem()->collidesWithItem(camera2->getPolygonItem(),Qt::IntersectsItemShape);
 //    qDebug()<<camera1->getPolygonItem()->collidesWithItem(camera2->getPolygonItem(),Qt::IntersectsItemBoundingRect);
 
 //    QRectF resultRect=intersectRect(camera1->getPolygonItem()->boundingRect(),camera2->getPolygonItem()->boundingRect());
 //    qDebug()<<resultRect;
+
+//    addItems();
 }
 
 
-//slot 函数 鼠标移动到item上方时，加亮四边形，移到另一个item时，取消加亮上一次加亮的四边形，使用setPen
+//鼠标移动到item上方时，加亮四边形，移到另一个item时，取消加亮上一次加亮的四边形，使用setPen
 void MyQMainWidget::slot_itemEntered(QListWidgetItem *current)
 {
-    //上一时刻是否为选中的，如果是，不进行处理
-    if(cameraEntered!=NULL&&cameraEntered!=cameraSelected){
-        if(cameraToGraphicsItemMap.contains(cameraEntered)){
-        QGraphicsPolygonItem *polygonItemTemp=cameraToGraphicsItemMap.value(cameraEntered);
+    //鼠标上一时刻移动到的Entered如果不是Selected，取消加粗。
+    if(cuttingNodeEntered!=NULL && cuttingNodeEntered!=cuttingNodeSelected){
+        if(cameraToGraphicsItemMap.contains(cuttingNodeEntered)){
+        QGraphicsPolygonItem *polygonItemTemp=cameraToGraphicsItemMap.value(cuttingNodeEntered);
         polygonItemTemp->setPen(QPen());
         }
     }
-    //跟新为这一时刻的，如果是选中的，也不需要进行处理
-    cameraEntered=cameraToListWidgetItemMap.key(current);
-    if(cameraEntered!=NULL&&cameraEntered!=cameraSelected){
-        if(cameraToGraphicsItemMap.contains(cameraEntered)){
-        QGraphicsPolygonItem *polygonItemTemp=cameraToGraphicsItemMap.value(cameraEntered);
+
+    //根据QListWidgetItem找到cuttingNode对象，并更新cuttingNodeEntered。
+    cuttingNodeEntered=cameraToListWidgetItemMap.key(current);
+
+    if(cuttingNodeEntered!=NULL&&cuttingNodeEntered!=cuttingNodeSelected){
+        if(cameraToGraphicsItemMap.contains(cuttingNodeEntered)){
+        QGraphicsPolygonItem *polygonItemTemp=cameraToGraphicsItemMap.value(cuttingNodeEntered);
         polygonItemTemp->setPen(QPen(Qt::red,1));
         }
     }
@@ -277,11 +277,11 @@ void MyQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem 
         }
     }
 
-    cameraSelected=cameraToListWidgetItemMap.key(current);
+    cuttingNodeSelected=cameraToListWidgetItemMap.key(current);
 
-    if(cameraSelected!=NULL){//健壮性检查
-        if(cameraToGraphicsItemMap.contains(cameraSelected)){
-        QGraphicsPolygonItem *polygonItemTemp=cameraToGraphicsItemMap.value(cameraSelected);
+    if(cuttingNodeSelected!=NULL){//健壮性检查
+        if(cameraToGraphicsItemMap.contains(cuttingNodeSelected)){
+        QGraphicsPolygonItem *polygonItemTemp=cameraToGraphicsItemMap.value(cuttingNodeSelected);
           polygonItemTemp->setPen(QPen(Qt::red,3));
 //        polygonItemTemp->setGraphicsEffect(new QGraphicsColorizeEffect());
         }
@@ -290,7 +290,6 @@ void MyQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem 
 
 //!计算拓扑信息
 void MyQMainWidget::slot_getTopologicalStructureData(){
-
     //需要先清空重组节点append的数据。
  for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
     RecombinationNode* recombinationNodeTemp=iterator.next();
@@ -425,7 +424,7 @@ void MyQMainWidget::slot_getTopologicalStructureData(){
         cuttingNodeTemp->setMatrixCol(matrixCol);
         cuttingNodeTemp->setMatrixRow(matrixRow);
 
-        qDebug()<<mat;
+//        qDebug()<<mat;
         //!有覆盖的重组节点处加入信息
         for(int i=0;i<mat.size();i++){
             int idFromMat= mat[i];
@@ -433,13 +432,14 @@ void MyQMainWidget::slot_getTopologicalStructureData(){
             recombinationNodeTemp->appendReceivedList(cuttingNodeTemp->getIp());//加入摄像机IP
 
             QVector<QPointF> fourPoints=translateById(areaTV,idFromMat);
-            qDebug()<<fourPoints;
+//            qDebug()<<fourPoints;
         }
 
 
     }//遍历切分节点循环结束。
 
 }
+
 QVector<QPointF> MyQMainWidget::translateById(QVector<QPointF> areaTv,int id){
     QVector<QPointF> translatePoints(0);
     for(int i=0;i<areaTv.size();i++){
@@ -478,10 +478,10 @@ void MyQMainWidget::slot_uploadBackgroundImage()
     }
 
 }
-//接受到回复
+
+//接受回复
 void MyQMainWidget::slot_replyFinished(QNetworkReply *reply)
 {
-//    qDebug("replyFinished");
     if(reply->error()!=QNetworkReply::NoError){
         qDebug(QString::number(reply->error()).toLatin1());
         QMessageBox msgBox;
@@ -503,6 +503,7 @@ void MyQMainWidget::slot_replyFinished(QNetworkReply *reply)
         reply->deleteLater();
         return;
     }else if(reply==cuttingNoteReply){
+        qDebug()<<"cuttingNoteReply from slot_replyFinished";
         QString all=reply->readAll();
 //        qDebug()<<all;
         //转为Array
@@ -592,7 +593,7 @@ void MyQMainWidget::slot_replyFinished(QNetworkReply *reply)
             recombinationNodeTemp->setIp(ip);
 
             recombinationNodeTemp->setId(id);
-            qDebug()<<id<<" "<<ip;
+//            qDebug()<<id<<" "<<ip;
             recombinationNodeList<<recombinationNodeTemp;
         }
 
@@ -635,12 +636,12 @@ void MyQMainWidget::slot_upLoadData()
 
             QJsonDocument jsonDocument = QJsonDocument::fromVariant(variantMap);
 
-            qDebug()<<jsonDocument.toJson();
+//            qDebug()<<jsonDocument.toJson();
 
         //!Put 进行更新的代码
             QString UrlPut=m_host+"snippets/";
             UrlPut.append(QString::number(id));
-            qDebug()<<UrlPut;
+//            qDebug()<<UrlPut;
 
             networkPutRequest.setUrl(QUrl(UrlPut));
             networkPutRequest.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
@@ -664,7 +665,7 @@ void MyQMainWidget::slot_upLoadData()
 
             QJsonDocument jsonDocument = QJsonDocument::fromVariant(variantMap);
 
-            qDebug()<<jsonDocument.toJson();
+//            qDebug()<<jsonDocument.toJson();
 
         //!Put 进行更新的代码
             QString UrlPut=m_host+"mat/";
@@ -684,9 +685,14 @@ void MyQMainWidget::slot_openRegisterDialog()
         myProcess->start("E:\\Workspace\\VisualStudioWorkspace\\互信息校准测试\\x64\\Debug\\互信息校准测试.exe");
 }
 
+void MyQMainWidget::slot_readyRead()
+{
+    qDebug()<<"slot_readyRead";
+}
+
 void MyQMainWidget::addItems()
 {
-    //获取到cameraList后，每一个camera对象生成一个键值对，对应相应的QGraphicsPolygonItem和QListWidgetItem对象
+    //获取到cameraList后，每一个CuttingNode对象生成一个键值对，对应相应的QGraphicsPolygonItem和QListWidgetItem对象
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
         CuttingNode* cameraTemp=iterator.next();
 
@@ -695,7 +701,6 @@ void MyQMainWidget::addItems()
         polygonItemTemp->setCursor(QCursor(Qt::PointingHandCursor));
         cameraTemp->setPolygonItem(polygonItemTemp);
         cameraToGraphicsItemMap.insert(cameraTemp,polygonItemTemp);
-
 
         QListWidgetItem *listWidgetItemTemp=new QListWidgetItem(cameraTemp->getIp(),cameraListWidget);
         cameraToListWidgetItemMap.insert(cameraTemp,listWidgetItemTemp);
