@@ -7,7 +7,7 @@
 //#include<QTextCodec>
 #include"recombinationNode.h"
 
-
+#include<QMenuBar>
 int main(int argc, char *argv[])
 {
     //QApplication对象
@@ -19,8 +19,15 @@ int main(int argc, char *argv[])
     font.setBold(true);
     qApplication.setFont(font);
 
-    MyQMainWidget *myQMainWindow=new MyQMainWidget();
-    myQMainWindow->show();
+    MyQMainWidget *myQMainWidget=new MyQMainWidget();
+    myQMainWidget->show();
+
+    //后续可使用QMainWindow加入工具栏
+//    QMainWindow myQMainWindow;
+//    myQMainWindow.setCentralWidget(myQMainWidget);
+//    QMenu * fileMenu=myQMainWindow.createPopupMenu();
+//    fileMenu = myQMainWindow.menuBar()->addMenu("&File");
+//    myQMainWindow.show();
 
     //Enters the main event loop and waits until exit() is called, then returns the value that was set to exit() (which is 0 if exit() is called via quit()).
     return qApplication.exec();

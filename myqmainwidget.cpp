@@ -190,9 +190,13 @@ void MyQMainWidget::slot_requestData()
     QNetworkRequest & cuttingNodeRequest=QNetworkRequest(QUrl(cuttingNodeUrl));
     QNetworkRequest & recombinationNodeRequest=QNetworkRequest(QUrl(recombinationNodeUrl));
     //发送给服务器，等待回应。主线程会异步调用
-    cuttingNoteReply=m_pManager->get(cuttingNodeRequest);
+    cuttingNodeReply=m_pManager->get(cuttingNodeRequest);
     recombinationNodeReply=m_pManager->get(recombinationNodeRequest);
-    connect(cuttingNoteReply,SIGNAL(readyRead()),this,SLOT(slot_readyRead()));
+    connect(cuttingNodeReply,SIGNAL(readyRead()),this,SLOT(slot_cuttingNodeReplyReadyRead()));
+    connect(recombinationNodeReply,SIGNAL(readyRead()),this,SLOT(slot_recombinationNodeReplyReadyRead()));
+
+//    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this, SLOT(slotError(QNetworkReply::NetworkError)));
+//    connect(reply, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(slotSslErrors(QList<QSslError>)));
 
     //测试代码-----
     //测试收到如下坐标的四边形，转到Camera对象中
@@ -290,13 +294,14 @@ void MyQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem 
 
 //!计算拓扑信息
 void MyQMainWidget::slot_getTopologicalStructureData(){
+
     //需要先清空重组节点append的数据。
- for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
-    RecombinationNode* recombinationNodeTemp=iterator.next();
-    recombinationNodeTemp->clearReceivedListAndPosition();
+    for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
+        RecombinationNode* recombinationNodeTemp=iterator.next();
+        recombinationNodeTemp->clearReceivedListAndPosition();
     }
 
-    //对于每个相机、和切分节点都运算一次。
+    //对于每个切分节点都运算一次。
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
         CuttingNode* cuttingNodeTemp=iterator.next();
 
@@ -310,6 +315,7 @@ void MyQMainWidget::slot_getTopologicalStructureData(){
             QPointF pTemp=myQGraphicsView->mapFromScene(areaWorld.at(i));
             areaObserve<<pTemp;
         }
+
         //!转换成拼接屏坐标系 QVector<QPointF> areaTV(0)
         //摄像机的标定坐标 电视墙坐标系 即为id=1的拼接屏坐标
         QVector<QPointF> areaTV(0);
@@ -320,10 +326,11 @@ void MyQMainWidget::slot_getTopologicalStructureData(){
             areaTV<<pTemp;
         }
 
-        QPolygonF polygonareaTV(areaTV);
+
         //!计算切分节点的切分坐标 segmentXModelList segmentYModelList基于模型坐标，可能为空
+        QPolygonF polygonAreaTV(areaTV);
         //显示范围的外围矩形
-        QRectF polygonAreaRect=polygonareaTV.boundingRect();
+        QRectF polygonAreaRect=polygonAreaTV.boundingRect();
         qreal polygonAreaRectTopLeftX=polygonAreaRect.x();//四边形的外围矩形左上角点的x坐标
         qreal polygonAreaRectTopLeftY=polygonAreaRect.y();//四边形的外围矩形左上角点的y坐标
         qreal polygonAreaRectBottonRightX=polygonAreaRect.x()+polygonAreaRect.width();//四边形的外围矩形右下角点的x坐标
@@ -450,8 +457,7 @@ QVector<QPointF> MyQMainWidget::translateById(QVector<QPointF> areaTv,int id){
     return translatePoints;
 }
 
-void MyQMainWidget::slot_uploadBackgroundImage()
-{
+void MyQMainWidget::slot_uploadBackgroundImage(){
     //保存12张图片，主线程中执行
     myQGraphicsView->copyBackgroundImage();
 
@@ -459,7 +465,6 @@ void MyQMainWidget::slot_uploadBackgroundImage()
     progress.setWindowModality(Qt::WindowModal);
     progress.setMinimumDuration(0);
     progress.show();
-
 
     //发送到服务器上，主线程中执行
     for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
@@ -491,128 +496,22 @@ void MyQMainWidget::slot_replyFinished(QNetworkReply *reply)
 
         return;
     }
-    //--------------------------------------------------
+
 //Put数据的回调。
     if(reply==networkPutReply){
         QMessageBox *msgBox=new QMessageBox();
         msgBox->setText(tr("更新成功"));
         msgBox->show();
 
-       QTimer::singleShot(4000, msgBox, SLOT(close()));
+        QTimer::singleShot(4000, msgBox, SLOT(close()));
 
         reply->deleteLater();
         return;
-    }else if(reply==cuttingNoteReply){
-        qDebug()<<"cuttingNoteReply from slot_replyFinished";
-        QString all=reply->readAll();
-//        qDebug()<<all;
-        //转为Array
-        QJsonParseError json_error;
-        QJsonArray qJsonArray=QJsonDocument::fromJson(all.toLatin1(),&json_error).array();
-
-        if(json_error.error!=QJsonParseError::NoError){
-            QMessageBox msgBox;
-            msgBox.setText(tr("Json解析错误"));
-            msgBox.exec();
-            return;
-        }
-
-        for(int i=0;i<qJsonArray.size();i++){
-            QJsonValue value =qJsonArray.at(i);
-            QJsonObject qJsonObject=value.toObject();//转换成JsonObject
-
-            CuttingNode *cuttingNodeTemp=new CuttingNode();
-            QString ip,xa,ya,xb,yb,xc,yc,xd,yd;
-            int id;
-            id= qJsonObject["id"].toInt();
-            ip= qJsonObject["ip"].toString();
-            xa=qJsonObject["xa"].toString();
-            ya=qJsonObject["ya"].toString();
-            xb=qJsonObject["xb"].toString();
-            yb=qJsonObject["yb"].toString();
-            xc=qJsonObject["xc"].toString();
-            yc=qJsonObject["yc"].toString();
-            xd=qJsonObject["xd"].toString();
-            yd=qJsonObject["yd"].toString();
-
-            QPointF p1(xa.toFloat(),yb.toFloat());
-            QPointF p2(xb.toFloat(),ya.toFloat());
-            QPointF p3(xc.toFloat(),yc.toFloat());
-            QPointF p4(xd.toFloat(),yd.toFloat());
-            QVector<QPointF> vectorTemp(0);
-
-            vectorTemp<<p1<<p2<<p3<<p4;
-            cuttingNodeTemp->setIp(ip);
-            cuttingNodeTemp->setArea(vectorTemp);
-            cuttingNodeTemp->setId(id);
-
-            cuttingNodeList<<cuttingNodeTemp;
-        }
-
-        addItems();
-
-
-        QMessageBox *msgBox=new QMessageBox();
-        QString str="接收到";
-        str.append(QString::number(cuttingNodeList.length())).append("个切分节点");
-        msgBox->setText(str);
-        msgBox->show();
-        msgBox->setIcon(QMessageBox::Information);
-        QTimer::singleShot(4000, msgBox, SLOT(close()));
-
-        reply->deleteLater();
-
-        //-----------------------------------------------------------------------------
-    }else if(reply==recombinationNodeReply){
-
-        QString all=reply->readAll();
-
-        //转为Array
-        QJsonParseError json_error;
-        QJsonArray qJsonArray=QJsonDocument::fromJson(all.toLatin1(),&json_error).array();
-
-        if(json_error.error!=QJsonParseError::NoError){
-            QMessageBox msgBox;
-            msgBox.setText(tr("Json解析错误"));
-            msgBox.exec();
-            return;
-        }
-
-        for(int i=0;i<qJsonArray.size();i++){
-            QJsonValue value =qJsonArray.at(i);
-            QJsonObject qJsonObject=value.toObject();//转换成JsonObject
-
-            RecombinationNode *recombinationNodeTemp=new RecombinationNode();
-
-            QString ip;
-            int id;
-
-            id= qJsonObject["id"].toInt();
-            ip= qJsonObject["ip"].toString();
-
-            recombinationNodeTemp->setIp(ip);
-
-            recombinationNodeTemp->setId(id);
-//            qDebug()<<id<<" "<<ip;
-            recombinationNodeList<<recombinationNodeTemp;
-        }
-
-        QMessageBox *msgBox=new QMessageBox();
-        QString str="接收到";
-        str.append(QString::number(recombinationNodeList.length())).append("个重组节点");
-        msgBox->setText(str);
-        msgBox->setIcon(QMessageBox::Information);
-        msgBox->show();
-
-        QTimer::singleShot(4000, msgBox, SLOT(close()));
-        reply->deleteLater();
     }
 
 }
 
-void MyQMainWidget::slot_upLoadData()
-{
-
+void MyQMainWidget::slot_upLoadData(){
         for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
             CuttingNode* cuttingNodeTemp=iterator.next();
             int id=cuttingNodeTemp->getId();
@@ -685,13 +584,111 @@ void MyQMainWidget::slot_openRegisterDialog()
         myProcess->start("E:\\Workspace\\VisualStudioWorkspace\\互信息校准测试\\x64\\Debug\\互信息校准测试.exe");
 }
 
-void MyQMainWidget::slot_readyRead()
+
+void MyQMainWidget::slot_cuttingNodeReplyReadyRead()
 {
-    qDebug()<<"slot_readyRead";
+    QString all=cuttingNodeReply->readAll();
+    //转为Array
+    QJsonParseError json_error;
+    QJsonArray qJsonArray=QJsonDocument::fromJson(all.toLatin1(),&json_error).array();
+
+    if(json_error.error!=QJsonParseError::NoError){
+        QMessageBox msgBox;
+        msgBox.setText(tr("Json解析错误"));
+        msgBox.exec();
+        return;
+    }
+    for(int i=0;i<qJsonArray.size();i++){
+        QJsonValue value =qJsonArray.at(i);
+        QJsonObject qJsonObject=value.toObject();//转换成JsonObject
+
+        CuttingNode *cuttingNodeTemp=new CuttingNode();
+        QString ip,xa,ya,xb,yb,xc,yc,xd,yd;
+        int id;
+        id= qJsonObject["id"].toInt();
+        ip= qJsonObject["ip"].toString();
+        xa=qJsonObject["xa"].toString();
+        ya=qJsonObject["ya"].toString();
+        xb=qJsonObject["xb"].toString();
+        yb=qJsonObject["yb"].toString();
+        xc=qJsonObject["xc"].toString();
+        yc=qJsonObject["yc"].toString();
+        xd=qJsonObject["xd"].toString();
+        yd=qJsonObject["yd"].toString();
+
+        QPointF p1(xa.toFloat(),yb.toFloat());
+        QPointF p2(xb.toFloat(),ya.toFloat());
+        QPointF p3(xc.toFloat(),yc.toFloat());
+        QPointF p4(xd.toFloat(),yd.toFloat());
+        QVector<QPointF> vectorTemp(0);
+
+        vectorTemp<<p1<<p2<<p3<<p4;
+        cuttingNodeTemp->setIp(ip);
+        cuttingNodeTemp->setArea(vectorTemp);
+        cuttingNodeTemp->setId(id);
+
+        cuttingNodeList<<cuttingNodeTemp;
+    }
+
+    addItems();
+
+    QMessageBox *msgBox=new QMessageBox();
+
+    QString str="接收到";
+    str.append(QString::number(cuttingNodeList.length())).append("个切分节点");
+    msgBox->setText(str);
+    msgBox->show();
+    msgBox->setIcon(QMessageBox::Information);
+
+    QTimer::singleShot(4000, msgBox, SLOT(close()));
+
+    cuttingNodeReply->deleteLater();
 }
 
-void MyQMainWidget::addItems()
-{
+void MyQMainWidget::slot_recombinationNodeReplyReadyRead(){
+    QString all=recombinationNodeReply->readAll();
+
+    //转为Array
+    QJsonParseError json_error;
+    QJsonArray qJsonArray=QJsonDocument::fromJson(all.toLatin1(),&json_error).array();
+
+    if(json_error.error!=QJsonParseError::NoError){
+        QMessageBox msgBox;
+        msgBox.setText(tr("Json解析错误"));
+        msgBox.exec();
+        return;
+    }
+
+    for(int i=0;i<qJsonArray.size();i++){
+        QJsonValue value =qJsonArray.at(i);
+        QJsonObject qJsonObject=value.toObject();//转换成JsonObject
+
+        RecombinationNode *recombinationNodeTemp=new RecombinationNode();
+
+        QString ip;
+        int id;
+
+        id= qJsonObject["id"].toInt();
+        ip= qJsonObject["ip"].toString();
+
+        recombinationNodeTemp->setIp(ip);
+        recombinationNodeTemp->setId(id);
+//            qDebug()<<id<<" "<<ip;
+        recombinationNodeList<<recombinationNodeTemp;
+    }
+
+    QMessageBox *msgBox=new QMessageBox();
+    QString str="接收到";
+    str.append(QString::number(recombinationNodeList.length())).append("个重组节点");
+    msgBox->setText(str);
+    msgBox->setIcon(QMessageBox::Information);
+    msgBox->show();
+
+    QTimer::singleShot(4000, msgBox, SLOT(close()));
+    recombinationNodeReply->deleteLater();
+}
+
+void MyQMainWidget::addItems(){
     //获取到cameraList后，每一个CuttingNode对象生成一个键值对，对应相应的QGraphicsPolygonItem和QListWidgetItem对象
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
         CuttingNode* cameraTemp=iterator.next();
@@ -713,7 +710,7 @@ QRectF MyQMainWidget::intersectRect(QRectF rect1,QRectF rect2)
     float topLeftX=max(rect1.x(), rect2.x());
     float width =  min(rect1.x()+rect1.width(),rect2.x()+rect2.width()) - max(rect1.x(), rect2.x());
     float topLeftY=max(rect1.y(),rect2.y());
-    float height =  min(rect1.y()+rect1.height(),rect2.y()+rect2.height()) - max(rect1.y(),rect2.y());
+    float height = min(rect1.y()+rect1.height(),rect2.y()+rect2.height()) - max(rect1.y(),rect2.y());
 
     return QRectF(topLeftX,topLeftY,width,height);
 }

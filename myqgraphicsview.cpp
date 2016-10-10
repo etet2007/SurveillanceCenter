@@ -15,9 +15,10 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 {
     m_rotation=0.0;
     m_scale=50;
-    //控件宽高
+    //控件宽高,根据需求改变：http://blog.csdn.net/chlk118/article/details/24882641
     setFixedWidth(viewWidth);
     setFixedHeight(viewHeight);
+
     setDragMode(QGraphicsView::ScrollHandDrag);//在View中可以拖动
     initBoundary();
     readBackgroundPic();

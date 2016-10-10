@@ -37,7 +37,10 @@ public slots:
     void slot_upLoadData();
     void slot_openRegisterDialog();
 
-    void slot_readyRead();
+    void slot_cuttingNodeReplyReadyRead();
+    void slot_recombinationNodeReplyReadyRead();
+
+
 private:
     //核心：QGraphicsView类
     MyQGraphicsView *myQGraphicsView;
@@ -62,11 +65,11 @@ private:
 
     QNetworkRequest networkPutRequest;
     QNetworkReply * networkPutReply;
-    QNetworkReply * cuttingNoteReply;
+    QNetworkReply * cuttingNodeReply;
     QNetworkReply * recombinationNodeReply;
 
     //主机IP地址
-    QString m_host="http://192.168.153.148:8001/";
+    QString m_host="http://192.168.153.147:8001/";
 
     QString recombinationNodeUrl;
 
