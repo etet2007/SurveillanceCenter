@@ -31,7 +31,7 @@ public slots:
     void slot_requestData();
     void slot_itemEntered(QListWidgetItem* current);
     void slot_itemSelected(QListWidgetItem* current, QListWidgetItem *previous);
-    void slot_getTopologicalStructureData();
+    void slot_calcTopologicalData();
     void slot_uploadBackgroundImage();
     void slot_replyFinished(QNetworkReply *);
     void slot_upLoadData();
@@ -69,7 +69,7 @@ private:
     QNetworkReply * recombinationNodeReply;
 
     //主机IP地址
-    QString m_host="http://192.168.153.147:8001/";
+    QString m_host="http://192.168.153.174:8001/";
 
     QString recombinationNodeUrl;
 

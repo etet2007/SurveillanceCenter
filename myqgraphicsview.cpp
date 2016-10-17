@@ -224,7 +224,7 @@ void MyQGraphicsView::drawForeground(QPainter *painter, const QRectF &rect)
 {
     //性能差 需要进行整理.
     painter->setPen(Qt::DotLine);
-    painter->setPen(QPen(Qt::red));
+    painter->setPen(QPen(Qt::red,5));
 
     QPointF verticalLine1top=mapToScene(verticalLine1topView);
     QPointF verticalLine1Button=mapToScene(verticalLine1ButtonView);

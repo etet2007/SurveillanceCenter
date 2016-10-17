@@ -77,10 +77,29 @@ void RecombinationNode::clearReceivedListAndPosition()
 {
     m_receivedList.clear();
     m_position.clear();
+    fourPointsList.clear();
 }
 QString RecombinationNode::getFourPointsList() const
 {
     return fourPointsList;
+}
+
+void RecombinationNode::appendFourPointsList(QVector<QPointF> fourPoints)
+{
+
+    for (int i = 0; i < fourPoints.size(); ++i) {
+        QPointF pointTemp=fourPoints[i];
+        if(!fourPointsList.isEmpty()){
+            if(i==0)
+                fourPointsList.append(";");
+            else
+                fourPointsList.append(",");
+        }
+        fourPointsList.append(QString::number(pointTemp.x()).toLatin1());
+        fourPointsList.append(",");
+        fourPointsList.append(QString::number(pointTemp.y()).toLatin1());
+
+    }
 }
 
 

@@ -98,7 +98,7 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
     //计算按钮
     QPushButton *calcButton = new QPushButton(mainGroupBox);
     calcButton->setText(tr("生成摄像机参数"));
-    connect(calcButton, SIGNAL(clicked(bool)), this, SLOT(slot_getTopologicalStructureData()));
+    connect(calcButton, SIGNAL(clicked(bool)), this, SLOT(slot_calcTopologicalData()));
 
     //更新按钮
     QPushButton *uploadDataButton = new QPushButton(mainGroupBox);
@@ -180,8 +180,8 @@ void MyQMainWidget::slot_requestData()
 
     //http://192.168.153.209:8000/snippets/?format=json
 
-    QString cuttingNodeUrl=m_host+"snippets/search/"+areaString+"/?format=json";
-    QString recombinationNodeUrl=m_host+"mat/?format=json";
+    QString cuttingNodeUrl=m_host+"cuttingnode/search/"+areaString+"/?format=json";
+    QString recombinationNodeUrl=m_host+"recombinationnode/?format=json";
 
 //    qDebug()<<cuttingNodeUrl;
 //    qDebug()<<recombinationNodeUrl;
@@ -293,8 +293,7 @@ void MyQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem 
 }
 
 //!计算拓扑信息
-void MyQMainWidget::slot_getTopologicalStructureData(){
-
+void MyQMainWidget::slot_calcTopologicalData(){
     //需要先清空重组节点append的数据。
     for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
         RecombinationNode* recombinationNodeTemp=iterator.next();
@@ -308,7 +307,7 @@ void MyQMainWidget::slot_getTopologicalStructureData(){
         //!算法输入数据：摄像机的世界坐标系标定坐标  QVector<QPointF> areaWorld
         QVector<QPointF> areaWorld=cuttingNodeTemp->getArea();
 
-        //!转换为观察坐标系 QVector<QPointF> areaObserve(0);
+        //!转换为观察坐标系、视口坐标系，宽高为graphicsView的宽高。
         //摄像机的标定坐标 观察坐标系 areaObserve
         QVector<QPointF> areaObserve(0);
         for (int i = 0; i < areaWorld.size(); ++i) {
@@ -359,7 +358,7 @@ void MyQMainWidget::slot_getTopologicalStructureData(){
         }
         cuttingNodeTemp->setCuttingXModelList(segmentXModelList);
         cuttingNodeTemp->setCuttingYModelList(cuttingYModelList);
-
+        //切分节点需要发到哪些节点上。
         QList<int> mat;
         // segmentYTvList.size()+1 * segmentXTvList.size()+1 的mat
         int matrixRow=cuttingYTvList.size()+1;
@@ -432,14 +431,17 @@ void MyQMainWidget::slot_getTopologicalStructureData(){
         cuttingNodeTemp->setMatrixRow(matrixRow);
 
 //        qDebug()<<mat;
-        //!有覆盖的重组节点处加入信息
+        //! 有覆盖的重组节点处加入信息
+        //! 遍历当前切分节点的拓扑矩阵
         for(int i=0;i<mat.size();i++){
-            int idFromMat= mat[i];
-            RecombinationNode* recombinationNodeTemp=recombinationNodeList[idFromMat-1]; //现在逐个取出全部重组节点
+            int idFromMat= mat[i];//id :1~12
+            RecombinationNode* recombinationNodeTemp=recombinationNodeList[idFromMat-1]; //逐个取出重组节点
             recombinationNodeTemp->appendReceivedList(cuttingNodeTemp->getIp());//加入摄像机IP
 
             QVector<QPointF> fourPoints=translateById(areaTV,idFromMat);
-//            qDebug()<<fourPoints;
+            recombinationNodeTemp->appendFourPointsList(fourPoints);
+
+            qDebug()<<recombinationNodeTemp->getFourPointsList();
         }
 
 
@@ -494,6 +496,7 @@ void MyQMainWidget::slot_replyFinished(QNetworkReply *reply)
         msgBox.setText(tr("网络连接异常"));
         msgBox.exec();
 
+        QTimer::singleShot(4000, &msgBox, SLOT(close()));
         return;
     }
 
@@ -538,7 +541,7 @@ void MyQMainWidget::slot_upLoadData(){
 //            qDebug()<<jsonDocument.toJson();
 
         //!Put 进行更新的代码
-            QString UrlPut=m_host+"snippets/";
+            QString UrlPut=m_host+"cuttingnode/";
             UrlPut.append(QString::number(id));
 //            qDebug()<<UrlPut;
 
@@ -553,23 +556,26 @@ void MyQMainWidget::slot_upLoadData(){
 
             QString receivedListString;
             QString position;
+            QString fourPoints;
 
             receivedListString=recombinationNodeTemp->getReceivedListString();
             position=recombinationNodeTemp->position();
+            fourPoints=recombinationNodeTemp->getFourPointsList();
 
+            qDebug()<<fourPoints;
             QVariantMap variantMap;
 //            variantMap.insert("id",id);
             variantMap.insert("toploMat",receivedListString);
             variantMap.insert("position",position);
+            variantMap.insert("fourpoints",fourPoints);
 
             QJsonDocument jsonDocument = QJsonDocument::fromVariant(variantMap);
 
-//            qDebug()<<jsonDocument.toJson();
+            qDebug()<<jsonDocument.toJson();
 
         //!Put 进行更新的代码
-            QString UrlPut=m_host+"mat/";
+            QString UrlPut=m_host+"recombinationnode/";
             UrlPut.append(QString::number(id));
-
 
             networkPutRequest.setUrl(QUrl(UrlPut));
             networkPutRequest.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");

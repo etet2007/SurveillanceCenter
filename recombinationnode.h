@@ -3,6 +3,7 @@
 
 #include<QString>
 #include<QList>
+#include<QVector>
 #include<QPointF>
 
 //重组节点类
@@ -30,13 +31,13 @@ public:
     void clearReceivedListAndPosition();
 
     QString getFourPointsList() const;
-
+    void appendFourPointsList(QVector<QPointF> fourPoints);
 private:
     int m_id;  //当前ID编号
     QString m_ip;//重组节点ip地址
-    QList<QString> m_receivedList; //接收列表，每个元素为切分节点IP
-
+    QList<QString> m_receivedList; //重组节点接收列表，每个元素为切分节点IP
     QString m_position;//不用
+
     QString fourPointsList;
 
 };
