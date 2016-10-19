@@ -15,13 +15,13 @@ class QNetworkAccessManager;
 class QListWidget;
 
 //主控件类
-class MyQMainWidget : public QWidget
+class CenterQMainWidget : public QWidget
 {
     Q_OBJECT
 public:
     //声明为explicit的构造函数不能在隐式转换中使用。
-    explicit MyQMainWidget(QWidget *parent = 0);
-    ~MyQMainWidget();
+    explicit CenterQMainWidget(QWidget *parent = 0);
+    ~CenterQMainWidget();
     //电视墙排列
 static int table[30];
 
@@ -42,6 +42,11 @@ public slots:
 
 
 private:
+    //主机IP地址
+    QString m_host="http://192.168.153.174:8001/";
+    QString cuttingnodePutUrl;
+    QString recombinationnodePutUrl;
+
     //核心：QGraphicsView类
     MyQGraphicsView *myQGraphicsView;
     MyQGraphicsScene *myQGraphicsScene;
@@ -67,9 +72,6 @@ private:
     QNetworkReply * networkPutReply;
     QNetworkReply * cuttingNodeReply;
     QNetworkReply * recombinationNodeReply;
-
-    //主机IP地址
-    QString m_host="http://192.168.153.174:8001/";
 
     QString recombinationNodeUrl;
 

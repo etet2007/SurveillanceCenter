@@ -22,28 +22,26 @@ INCLUDEPATH +=    E:\Workspace\VisualStudioWorkspace\ClientDLL\ClientDLL \
 SOURCES += main.cpp\
     myqgraphicsscene.cpp \
     myqgraphicsview.cpp \
-    myqmainwidget.cpp \
     myqgraphicspolygonitem.cpp \
     cuttingNode.cpp \
-#    boundary.cpp \
-    recombinationNode.cpp
+    recombinationNode.cpp \
+    centerqmainwidget.cpp
 
 
 
 #HEADER FILES
 HEADERS  +=myqgraphicsscene.h \
  myqgraphicsview.h \
-    myqmainwidget.h \
     myqgraphicspolygonitem.h \
     cuttingNode.h \
     ClientDLL.h \
-#    boundary.h \
-    recombinationNode.h
+    recombinationNode.h \
+    centerqmainwidget.h
 
 
-LIBS += G:\curl-7.40.0-devel-mingw64\lib64\libssh2.lib \
-G:\curl-7.40.0-devel-mingw64\lib64\libcurl.lib \
-E:\Workspace\VisualStudioWorkspace\ClientDLL\x64\Debug\ClientDLL.lib \
+#LIBS += G:\curl-7.40.0-devel-mingw64\lib64\libssh2.lib \
+#G:\curl-7.40.0-devel-mingw64\lib64\libcurl.lib \
+#E:\Workspace\VisualStudioWorkspace\ClientDLL\x64\Debug\ClientDLL.lib \
 
 LIBS += $$PWD\lib\libssh2.lib \
 $$PWD\lib\libcurl.lib \

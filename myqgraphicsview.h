@@ -55,8 +55,8 @@ signals:
 
 protected:
     void drawBackground(QPainter * painter, const QRectF & rect);
-    void drawForeground(QPainter * painter, const QRectF & rect);
 
+//    void render(QPainter * painter, const QRectF & target = QRectF(), const QRect & source = QRect(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);//用于截屏
 private:
     void MyQGraphicsView::paintEvent(QPaintEvent *event);
     //读取背景图

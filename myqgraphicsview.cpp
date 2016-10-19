@@ -10,6 +10,7 @@
 #include<QDebug>
 #include<QProgressDialog>
 
+
 MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 
 {
@@ -42,16 +43,13 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
     pal.setBrush(backgroundRole(), m_tile);
     setPalette(pal);
 
-    //尝试使用flag添加固定直线
-//    QGraphicsLineItem* item = scene->addLine(QLineF(verticalLine1topView,verticalLine1ButtonView));
-//    item->setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
+
 
 }
 
 //!读取图片
 void MyQGraphicsView::readBackgroundPic()
 {
-
     backgroundImage.load( "G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\background.bmp" );
 
     backgroundPic= QPixmap::fromImage( backgroundImage);//这里可以控制QImage转换成显示Pixmap的尺度
@@ -83,6 +81,7 @@ QString MyQGraphicsView::getViewArea(){
             QString::number(bottomRightScene.x())+","+QString::number(bottomRightScene.y())+"/"+
             QString::number(bottomLeftScene.x())+","+QString::number(bottomLeftScene.y());
     return str;
+
 //    qDebug(str.toLatin1());
 //    QList<QPointF> areaList;
 //    areaList<<zeroPointScene<< topRightScene <<bottomRightScene<<bottomLeftScene;
@@ -154,12 +153,10 @@ void MyQGraphicsView::changeScale(int value)
     scaleFactor;
     qreal factor=1.05;
 
-    if(value>m_scale)
-    {
+    if(value>m_scale){
         scaleFactor=pow(factor,(value-m_scale));
     }
-    else
-    {
+    else{
         scaleFactor=pow(1/factor,(m_scale-value));
     }
     scale(scaleFactor,scaleFactor);
@@ -211,45 +208,19 @@ void MyQGraphicsView::initBoundary(){
     horizontalLineList.append(horizontalLine2);
     horizontalLineList.append(horizontalLine3);
     horizontalLineList.append(horizontalLine4);
-
 }
 
 void MyQGraphicsView::paintEvent(QPaintEvent *event){
     QGraphicsView::paintEvent(event);
 
-
+    //画边界新函数
+    QPainter painter(this->viewport());
+    painter.setPen(QPen(Qt::red,4));
+    painter.drawLine(verticalLine1topView,verticalLine1ButtonView);
+    painter.drawLine(verticalLine2topView,verticalLine2ButtonView);
+    painter.drawLine(verticalLine3topView,verticalLine3ButtonView);
+    painter.drawLine(horizontalLine1LeftView,horizontalLine1RightView);
+    painter.drawLine(horizontalLine2LeftView,horizontalLine2RightView);
 }
 
-void MyQGraphicsView::drawForeground(QPainter *painter, const QRectF &rect)
-{
-    //性能差 需要进行整理.
-    painter->setPen(Qt::DotLine);
-    painter->setPen(QPen(Qt::red,5));
-
-    QPointF verticalLine1top=mapToScene(verticalLine1topView);
-    QPointF verticalLine1Button=mapToScene(verticalLine1ButtonView);
-
-    painter->drawLine(verticalLine1top,verticalLine1Button);
-
-    QPointF verticalLine2top=mapToScene(verticalLine2topView);
-    QPointF verticalLine2Button=mapToScene(verticalLine2ButtonView);
-
-    painter->drawLine(verticalLine2top,verticalLine2Button);
-
-    QPointF verticalLine3top=mapToScene(verticalLine3topView);
-    QPointF verticalLine3Button=mapToScene(verticalLine3ButtonView);
-
-    painter->drawLine(verticalLine3top,verticalLine3Button);
-
-    QPointF horizontalLine1Left=mapToScene(horizontalLine1LeftView);
-    QPointF horizontalLine1Right=mapToScene(horizontalLine1RightView);
-
-    painter->drawLine(horizontalLine1Left,horizontalLine1Right);
-
-    QPointF horizontalLine2Left=mapToScene(horizontalLine2LeftView);
-    QPointF horizontalLine2Right=mapToScene(horizontalLine2RightView);
-
-    painter->drawLine(horizontalLine2Left,horizontalLine2Right);
-
-}
 

@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
-//#include "myqgraphicsview.h"
-//#include "myqgraphicsscene.h"
-#include "myqmainwidget.h"
+#include "centerqmainwidget.h"
 
 //#include<QTextCodec>
 #include"recombinationNode.h"
@@ -19,8 +17,9 @@ int main(int argc, char *argv[])
     font.setBold(true);
     qApplication.setFont(font);
 
-    MyQMainWidget *myQMainWidget=new MyQMainWidget();
+    CenterQMainWidget *myQMainWidget=new CenterQMainWidget();
     myQMainWidget->show();
+
 
     //后续可使用QMainWindow加入工具栏
 //    QMainWindow myQMainWindow;

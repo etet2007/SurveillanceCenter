@@ -1,4 +1,4 @@
-﻿ #include "myqmainwidget.h"
+﻿ #include "centerqmainwidget.h"
 #include "myqgraphicsview.h"
 #include "myqgraphicsscene.h"
 #include <QGraphicsPolygonItem>
@@ -18,9 +18,7 @@
 #include <QProgressDialog>
 #include "boundary.h"
 #include "recombinationNode.h"
-
 #include "ClientDLL.h"
-//#include <QMediaPlayer>
 #include <QGraphicsVideoItem>
 
 #if _MSC_VER >= 1600
@@ -28,25 +26,28 @@
 #endif
 
 
-int MyQMainWidget::table[]={0,0,0,0,0,0,
+int CenterQMainWidget::table[]={0,0,0,0,0,0,
                            0,1,2,3,4,0,
                            0,5,6,7,8,0,
                            0,9,10,11,12,0,
                            0,0, 0, 0, 0,0};
 
-MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
+CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 {
     //设置窗口大小、标题
     setWindowState(Qt::WindowMaximized);
     setWindowTitle("Surveillance Center");
     //初始化myQGraphicsScene，父控件释放后会自动释放
     myQGraphicsScene=new MyQGraphicsScene();
+
     //初始化myQGraphicsView
     myQGraphicsView=new MyQGraphicsView(myQGraphicsScene);
     myQGraphicsView->setParent(this);//可以自动内存释放
     myQGraphicsView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 
-//    Boundary boundary=new Boundary(myQGraphicsView);
+    //初始化Url
+    cuttingnodePutUrl=m_host+"cuttingnode/";
+    recombinationnodePutUrl=m_host+"recombinationnode/";
 
     QPointF p1Standard(0,0);
     QPointF p2Standard(1920,0);
@@ -150,6 +151,12 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
     m_pManager=new QNetworkAccessManager(this); //QNetworkAccessManager
     connect(m_pManager,SIGNAL(finished(QNetworkReply*)),this,SLOT(slot_replyFinished(QNetworkReply*)));
 
+//测试 http post
+//    QUrl url =QUrl(m_host+"image/");
+//    QNetworkRequest & uploadImageRequest=QNetworkRequest(url);
+//    uploadImageRequest.setHeader(QNetworkRequest::ContentTypeHeader,"image/jpeg");
+//    m_pManager->post();
+
     //测试用重组节点
     for(int i=1;i<=12;i++){
         RecombinationNode *recombinationNode=new RecombinationNode();
@@ -159,13 +166,13 @@ MyQMainWidget::MyQMainWidget(QWidget *parent) : QWidget(parent)
 
 }
 
-MyQMainWidget::~MyQMainWidget()
+CenterQMainWidget::~CenterQMainWidget()
 {
     delete myQGraphicsScene;
 }
 
 //发送全景显示范围，获取数据库中摄像头数据
-void MyQMainWidget::slot_requestData()
+void CenterQMainWidget::slot_requestData()
 {
     //每次都清空存储的列表, 如果要清空，list map scene listwidget都要清空
     cuttingNodeList.clear();//应手动释放内部存储对象的内存
@@ -246,7 +253,7 @@ void MyQMainWidget::slot_requestData()
 
 
 //鼠标移动到item上方时，加亮四边形，移到另一个item时，取消加亮上一次加亮的四边形，使用setPen
-void MyQMainWidget::slot_itemEntered(QListWidgetItem *current)
+void CenterQMainWidget::slot_itemEntered(QListWidgetItem *current)
 {
     //鼠标上一时刻移动到的Entered如果不是Selected，取消加粗。
     if(cuttingNodeEntered!=NULL && cuttingNodeEntered!=cuttingNodeSelected){
@@ -269,7 +276,7 @@ void MyQMainWidget::slot_itemEntered(QListWidgetItem *current)
 
 
 //鼠标选中item时，加亮四边形，选中另一个item时，取消加亮上一次加亮的四边形，加亮此次选中的四边形，使用GraphicsEffect
-void MyQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem *previous){
+void CenterQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem *previous){
     CuttingNode* cuttingNodeTemp;
     cuttingNodeTemp=cameraToListWidgetItemMap.key(previous);
 
@@ -293,7 +300,7 @@ void MyQMainWidget::slot_itemSelected(QListWidgetItem *current, QListWidgetItem 
 }
 
 //!计算拓扑信息
-void MyQMainWidget::slot_calcTopologicalData(){
+void CenterQMainWidget::slot_calcTopologicalData(){
     //需要先清空重组节点append的数据。
     for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
         RecombinationNode* recombinationNodeTemp=iterator.next();
@@ -449,7 +456,7 @@ void MyQMainWidget::slot_calcTopologicalData(){
 
 }
 
-QVector<QPointF> MyQMainWidget::translateById(QVector<QPointF> areaTv,int id){
+QVector<QPointF> CenterQMainWidget::translateById(QVector<QPointF> areaTv,int id){
     QVector<QPointF> translatePoints(0);
     for(int i=0;i<areaTv.size();i++){
         QPointF pointF=areaTv[i];
@@ -459,7 +466,7 @@ QVector<QPointF> MyQMainWidget::translateById(QVector<QPointF> areaTv,int id){
     return translatePoints;
 }
 
-void MyQMainWidget::slot_uploadBackgroundImage(){
+void CenterQMainWidget::slot_uploadBackgroundImage(){
     //保存12张图片，主线程中执行
     myQGraphicsView->copyBackgroundImage();
 
@@ -472,12 +479,13 @@ void MyQMainWidget::slot_uploadBackgroundImage(){
     for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
         RecombinationNode* recombinationNodeTemp=iterator.next();
         int id=recombinationNodeTemp->id();
-
+        //QProgressDialog的数值
         progress.setValue(id);
 
         QString ip=recombinationNodeTemp->ip();
         Myhttpclient myhttpclient;
-//        qDebug()<<id<<" "<<ip;
+
+
         QString imageName;
         imageName=QString::number(id).append(".jpg");
         myhttpclient.deleteid(id);
@@ -487,16 +495,17 @@ void MyQMainWidget::slot_uploadBackgroundImage(){
 }
 
 //接受回复
-void MyQMainWidget::slot_replyFinished(QNetworkReply *reply)
+void CenterQMainWidget::slot_replyFinished(QNetworkReply *reply)
 {
     if(reply->error()!=QNetworkReply::NoError){
         qDebug(QString::number(reply->error()).toLatin1());
-        QMessageBox msgBox;
-        msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setText(tr("网络连接异常"));
-        msgBox.exec();
+        QMessageBox *msgBox=new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setText(tr("网络连接异常"));
+        msgBox->show();//exec的话不能关掉
+        //msgBox->exec();//Shows the dialog as a modal dialog, blocking until the user closes it. The function returns a DialogCode result.
 
-        QTimer::singleShot(4000, &msgBox, SLOT(close()));
+        QTimer::singleShot(4000, msgBox, SLOT(close()));
         return;
     }
 
@@ -514,7 +523,8 @@ void MyQMainWidget::slot_replyFinished(QNetworkReply *reply)
 
 }
 
-void MyQMainWidget::slot_upLoadData(){
+void CenterQMainWidget::slot_upLoadData(){
+    //上传切分节点数据。
         for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
             CuttingNode* cuttingNodeTemp=iterator.next();
             int id=cuttingNodeTemp->getId();
@@ -541,15 +551,13 @@ void MyQMainWidget::slot_upLoadData(){
 //            qDebug()<<jsonDocument.toJson();
 
         //!Put 进行更新的代码
-            QString UrlPut=m_host+"cuttingnode/";
-            UrlPut.append(QString::number(id));
-//            qDebug()<<UrlPut;
 
-            networkPutRequest.setUrl(QUrl(UrlPut));
+            networkPutRequest.setUrl(QUrl(cuttingnodePutUrl+QString::number(id)));
             networkPutRequest.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
             networkPutReply=m_pManager->put(networkPutRequest,jsonDocument.toJson());
         }
 
+        //上传重组节点数据。
         for(QListIterator<RecombinationNode*> iterator(recombinationNodeList);iterator.hasNext();){
             RecombinationNode* recombinationNodeTemp=iterator.next();
             int id=recombinationNodeTemp->id();
@@ -562,7 +570,6 @@ void MyQMainWidget::slot_upLoadData(){
             position=recombinationNodeTemp->position();
             fourPoints=recombinationNodeTemp->getFourPointsList();
 
-            qDebug()<<fourPoints;
             QVariantMap variantMap;
 //            variantMap.insert("id",id);
             variantMap.insert("toploMat",receivedListString);
@@ -571,27 +578,22 @@ void MyQMainWidget::slot_upLoadData(){
 
             QJsonDocument jsonDocument = QJsonDocument::fromVariant(variantMap);
 
-            qDebug()<<jsonDocument.toJson();
-
         //!Put 进行更新的代码
-            QString UrlPut=m_host+"recombinationnode/";
-            UrlPut.append(QString::number(id));
-
-            networkPutRequest.setUrl(QUrl(UrlPut));
+            networkPutRequest.setUrl(QUrl(recombinationnodePutUrl+(QString::number(id))));
             networkPutRequest.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
             networkPutReply=m_pManager->put(networkPutRequest,jsonDocument.toJson());
         }
 
 }
 
-void MyQMainWidget::slot_openRegisterDialog()
+void CenterQMainWidget::slot_openRegisterDialog()
 {
         QProcess *myProcess = new QProcess(parentWidget());
         myProcess->start("E:\\Workspace\\VisualStudioWorkspace\\互信息校准测试\\x64\\Debug\\互信息校准测试.exe");
 }
 
 
-void MyQMainWidget::slot_cuttingNodeReplyReadyRead()
+void CenterQMainWidget::slot_cuttingNodeReplyReadyRead()
 {
     QString all=cuttingNodeReply->readAll();
     //转为Array
@@ -651,7 +653,7 @@ void MyQMainWidget::slot_cuttingNodeReplyReadyRead()
     cuttingNodeReply->deleteLater();
 }
 
-void MyQMainWidget::slot_recombinationNodeReplyReadyRead(){
+void CenterQMainWidget::slot_recombinationNodeReplyReadyRead(){
     QString all=recombinationNodeReply->readAll();
 
     //转为Array
@@ -694,7 +696,7 @@ void MyQMainWidget::slot_recombinationNodeReplyReadyRead(){
     recombinationNodeReply->deleteLater();
 }
 
-void MyQMainWidget::addItems(){
+void CenterQMainWidget::addItems(){
     //获取到cameraList后，每一个CuttingNode对象生成一个键值对，对应相应的QGraphicsPolygonItem和QListWidgetItem对象
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
         CuttingNode* cameraTemp=iterator.next();
@@ -711,7 +713,7 @@ void MyQMainWidget::addItems(){
     }
 }
 
-QRectF MyQMainWidget::intersectRect(QRectF rect1,QRectF rect2)
+QRectF CenterQMainWidget::intersectRect(QRectF rect1,QRectF rect2)
 {
     float topLeftX=max(rect1.x(), rect2.x());
     float width =  min(rect1.x()+rect1.width(),rect2.x()+rect2.width()) - max(rect1.x(), rect2.x());
@@ -721,7 +723,7 @@ QRectF MyQMainWidget::intersectRect(QRectF rect1,QRectF rect2)
     return QRectF(topLeftX,topLeftY,width,height);
 }
 
-QPointF MyQMainWidget::tvToMonitor(QPointF inPoint,int id)
+QPointF CenterQMainWidget::tvToMonitor(QPointF inPoint,int id)
 {
     qreal x=inPoint.x();
     qreal y=inPoint.y();
