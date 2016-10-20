@@ -95,9 +95,9 @@ void RecombinationNode::appendFourPointsList(QVector<QPointF> fourPoints)
             else
                 fourPointsList.append(",");
         }
-        fourPointsList.append(QString::number(pointTemp.x()).toLatin1());
+        fourPointsList.append(QString::number(int (pointTemp.x())).toLatin1());
         fourPointsList.append(",");
-        fourPointsList.append(QString::number(pointTemp.y()).toLatin1());
+        fourPointsList.append(QString::number(int (pointTemp.y())).toLatin1());
 
     }
 }

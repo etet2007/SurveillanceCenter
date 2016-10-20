@@ -25,6 +25,8 @@ public:
     //电视墙排列
 static int table[30];
 
+static int table2[5][6];
+
 signals:
 //槽函数
 public slots:
@@ -83,7 +85,7 @@ private:
     QPointF tvToMonitor(QPointF inPoint, int id);
 
     QVector<QPointF> translateById(QVector<QPointF>,int id);
-
+    int calPointRegionId(QPointF point);
     void addItems();
 
 };

@@ -31,6 +31,11 @@ int CenterQMainWidget::table[]={0,0,0,0,0,0,
                            0,5,6,7,8,0,
                            0,9,10,11,12,0,
                            0,0, 0, 0, 0,0};
+int CenterQMainWidget::table2[5][6]={0,0,0,0,0,0,
+                                      0,1,2,3,4,0,
+                                      0,5,6,7,8,0,
+                                      0,9,10,11,12,0,
+                                      0,0, 0, 0, 0,0};
 
 CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 {
@@ -145,7 +150,7 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 
 
     connect(cameraListWidget,SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),this,SLOT(slot_itemSelected(QListWidgetItem*, QListWidgetItem*)));
-    connect(cameraListWidget,SIGNAL(cuttingNodeEntered(QListWidgetItem*)),this,SLOT(slot_itemEntered(QListWidgetItem*)));
+    connect(cameraListWidget,SIGNAL(itemEntered(QListWidgetItem*)),this,SLOT(slot_itemEntered(QListWidgetItem*)));
 
     //初始化网络连接管理器
     m_pManager=new QNetworkAccessManager(this); //QNetworkAccessManager
@@ -158,12 +163,13 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 //    m_pManager->post();
 
     //测试用重组节点
-    for(int i=1;i<=12;i++){
-        RecombinationNode *recombinationNode=new RecombinationNode();
-        recombinationNode->setId(i);
-        recombinationNodeList.append(recombinationNode);
-    }
-
+//    for(int i=1;i<=12;i++){
+//        RecombinationNode *recombinationNode=new RecombinationNode();
+//        recombinationNode->setId(i);
+//        recombinationNodeList.append(recombinationNode);
+//    }
+    QPoint t(4000,3000);
+    calPointRegionId(t);
 }
 
 CenterQMainWidget::~CenterQMainWidget()
@@ -344,68 +350,42 @@ void CenterQMainWidget::slot_calcTopologicalData(){
 
         //切分节点的切分坐标 segmentXModelList segmentYModelList 分别为x y坐标方向的
         QList<qreal> segmentXModelList,cuttingYModelList;
-        //记录被哪几个边界切分，01234/0123
-        QList<int> segmentXTvList,cuttingYTvList;
+        //记录切分边界的Id，01234/0123
+        QList<int> cuttingXTvList,cuttingYTvList;
 
         //垂直边界 x坐标
         for(int i=0;i<myQGraphicsView->verticalLineList.size();i++){
-            int boundary= myQGraphicsView->verticalLineList.at(i);
-            if(polygonAreaRectTopLeftX<boundary &&boundary<polygonAreaRectBottonRightX){ //polygonAreaRectTopLeftX<boundary<polygonAreaRectBottonRightX
+            int boundary= myQGraphicsView->verticalLineList.at(i);//verticalLineList : 0 1920 ...
+            if(polygonAreaRectTopLeftX<boundary && boundary<polygonAreaRectBottonRightX){ //polygonAreaRectTopLeftX<boundary<polygonAreaRectBottonRightX
                 segmentXModelList.append(boundary-polygonAreaRectTopLeftX);
-                segmentXTvList.append(i);
+                cuttingXTvList.append(i);
             }
         }
         //水平边界 y坐标
         for(int i=0;i<myQGraphicsView->horizontalLineList.size();i++){
             int boundary= myQGraphicsView->horizontalLineList.at(i);
-            if(polygonAreaRectTopLeftY<boundary &&boundary <polygonAreaRectBottonRightY){
+            if(polygonAreaRectTopLeftY<boundary && boundary <polygonAreaRectBottonRightY){
                 cuttingYModelList.append(boundary-polygonAreaRectTopLeftY);
                 cuttingYTvList.append(i);
             }
         }
         cuttingNodeTemp->setCuttingXModelList(segmentXModelList);
         cuttingNodeTemp->setCuttingYModelList(cuttingYModelList);
+
         //切分节点需要发到哪些节点上。
         QList<int> mat;
         // segmentYTvList.size()+1 * segmentXTvList.size()+1 的mat
         int matrixRow=cuttingYTvList.size()+1;
-        int matrixCol=segmentXTvList.size()+1;
+        int matrixCol=cuttingXTvList.size()+1;
 //        qDebug()<<QString::number(matrixRow).toLatin1()<<"*"<<QString::number(matrixCol).toLatin1();
 
-        if(matrixRow==1&&matrixCol==1){
-            //不需要切分的情况
-            int targetId=0;
-            bool isOutOfTheViewX=true;
-            bool isOutOfTheViewY=true;
-            for(int i=0;i<myQGraphicsView->verticalLineList.size()-1;i++){
-                if(myQGraphicsView->verticalLineList.at(i) <= polygonAreaRectTopLeftX  &&
-                        polygonAreaRectBottonRightX <= myQGraphicsView->verticalLineList.at(i+1)){
-                    targetId=i+1;
-                    isOutOfTheViewX=false;
-                    break;
-                }
-            }
-            int j=0;
-            for(int i=0;i<myQGraphicsView->horizontalLineList.size()-1;i++){
-                if(myQGraphicsView->horizontalLineList.at(i) <= polygonAreaRectTopLeftY &&
-                        polygonAreaRectBottonRightY <= myQGraphicsView->horizontalLineList.at(i+1)){
-                    targetId+=j;
-                    isOutOfTheViewY=false;
-                    break;
-                    }
-                j+=4;
-                }
-            if(isOutOfTheViewX||isOutOfTheViewY){
-                mat<<0;
-            }else{
-                mat<<targetId;
-            }
-
+        if(matrixRow==1 && matrixCol==1){
+                mat<<calPointRegionId(QPoint(polygonAreaRectTopLeftX,polygonAreaRectTopLeftY));
         }else{
-            int xStart=0,yStart=0;
+            int xStart=0,yStart=0;//起始区间
 
-            if(segmentXTvList.length()!=0){
-                xStart=segmentXTvList.at(0);
+            if(cuttingXTvList.length()!=0){//垂直方向有被切分
+                xStart=cuttingXTvList.at(0);
             }else{//垂直方向没有被切分，则要判断区间
                 for(int i=0;i<myQGraphicsView->verticalLineList.size()-1;i++){
                     if(polygonAreaRectTopLeftX  >=  myQGraphicsView->verticalLineList.at(i) &&
@@ -426,6 +406,7 @@ void CenterQMainWidget::slot_calcTopologicalData(){
                         }
                     }
             }
+
             int xPlusY_Start=xStart+yStart*6;
             for(int i=0;i<matrixRow;i++){   //行
                 for(int j=0;j<matrixCol;j++){   //列
@@ -437,18 +418,22 @@ void CenterQMainWidget::slot_calcTopologicalData(){
         cuttingNodeTemp->setMatrixCol(matrixCol);
         cuttingNodeTemp->setMatrixRow(matrixRow);
 
-//        qDebug()<<mat;
+        qDebug()<<mat;
         //! 有覆盖的重组节点处加入信息
         //! 遍历当前切分节点的拓扑矩阵
         for(int i=0;i<mat.size();i++){
-            int idFromMat= mat[i];//id :1~12
+
+            int idFromMat= mat[i];//id :1~12还有0
+            if(idFromMat==0){
+                continue;
+            }
             RecombinationNode* recombinationNodeTemp=recombinationNodeList[idFromMat-1]; //逐个取出重组节点
             recombinationNodeTemp->appendReceivedList(cuttingNodeTemp->getIp());//加入摄像机IP
 
             QVector<QPointF> fourPoints=translateById(areaTV,idFromMat);
             recombinationNodeTemp->appendFourPointsList(fourPoints);
 
-            qDebug()<<recombinationNodeTemp->getFourPointsList();
+//            qDebug()<<recombinationNodeTemp->getFourPointsList();
         }
 
 
@@ -464,6 +449,30 @@ QVector<QPointF> CenterQMainWidget::translateById(QVector<QPointF> areaTv,int id
         translatePoints<<ans;
     }
     return translatePoints;
+}
+
+int CenterQMainWidget::calPointRegionId(QPointF point)
+{
+    int colId=myQGraphicsView->verticalLineList.size();//列id 初始值为下方循环判断的缺失情况。 012345
+    int rowId=myQGraphicsView->horizontalLineList.size();//行id  01234
+    qreal x=point.x();
+    qreal y=point.y();
+    for(int i=0;i<myQGraphicsView->verticalLineList.size();i++){
+        if(x <= myQGraphicsView->verticalLineList.at(i)){
+         colId=i;
+         break;
+        }
+    }
+    for(int i=0;i<myQGraphicsView->horizontalLineList.size();i++){
+        if(y <= myQGraphicsView->horizontalLineList.at(i)){
+         rowId=i;
+         break;
+        }
+    }
+
+    int id=table2[rowId][colId];//查表获得
+
+    return id;
 }
 
 void CenterQMainWidget::slot_uploadBackgroundImage(){
