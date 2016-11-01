@@ -9,10 +9,9 @@
 #include<QGraphicsLineItem>
 #include<QDebug>
 #include<QProgressDialog>
-
+#include<QBitmap>
 
 MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
-
 {
     m_rotation=0.0;
     m_scale=50;
@@ -42,15 +41,17 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
     QPalette pal = palette();
     pal.setBrush(backgroundRole(), m_tile);
     setPalette(pal);
-
-
-
 }
 
 //!读取图片
 void MyQGraphicsView::readBackgroundPic()
 {
-    backgroundImage.load( "G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\background.bmp" );
+    if(!backgroundImage.load( "G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\background.bmp" )){
+        QMessageBox msgBox;
+        msgBox.setText(tr("读取图片失败"));
+        msgBox.exec();
+        return;
+    }
 
     backgroundPic= QPixmap::fromImage( backgroundImage);//这里可以控制QImage转换成显示Pixmap的尺度
     if(backgroundPic.isNull()){
@@ -90,7 +91,7 @@ QString MyQGraphicsView::getViewArea(){
 
 void MyQGraphicsView::copyBackgroundImage()
 {
-    //生成每块屏幕的图片并上传到服务器。
+    //生成每个重组节点的背景图片并上传到服务器。
     //1，取得小屏幕显示区域位置（先形成观察坐标系再转世界坐标系，使用Rect就不用考虑缩放）
     //2，裁剪似乎暂时只有 QImage::copy取出某图像的某个矩形区域，无法取出旋转了的区域
 
@@ -101,6 +102,12 @@ void MyQGraphicsView::copyBackgroundImage()
     progress.setMinimumDuration(0);
     progress.show();
 
+    //测试旋转
+    QImage imageTransformed=backgroundImage.transformed(matrix());
+    imageTransformed.save("imageTransformed.jpg");
+
+
+
     bool isSucceed;
     int count=1;
     for(int j=0;j<horizontalLineList.size()-1;j++){
@@ -109,13 +116,32 @@ void MyQGraphicsView::copyBackgroundImage()
             QPoint bottomRightPoint(verticalLineList.at(i+1)/ratio,horizontalLineList.at(j+1)/ratio);
             QPointF topLeftPointScene = mapToScene(topLeftPoint);
             QPointF bottomRightPointScene = mapToScene(bottomRightPoint);
-//            qDebug()<<topLeftPoint<<bottomRightPoint;
-
+            qDebug()<<"topLeftPointScene,bottomRightPointScene"<<topLeftPointScene<<bottomRightPointScene;
+//            qDebug()<<mapToScene();
             QRect rect;
             rect.setTopLeft(topLeftPointScene.toPoint());
             rect.setBottomRight(bottomRightPointScene.toPoint());
+
+
+
+//            topLeftPointScene,bottomRightPointScene QPointF(3677.64,1876.58) QPointF(4133.93,1910.97)
+//            QPoint(2540,3256) QPoint(2939,3479)
+//            QMatrix(11=0.906308 12=0.422618 21=-0.422618 22=0.906308 dx=0 dy=0)
+
+            QRect rectTransformed;
+            rectTransformed.setTopLeft(matrix().map(topLeftPointScene.toPoint()));
+            rectTransformed.setBottomRight(matrix().map(bottomRightPointScene.toPoint()));
+            qDebug()<<matrix().map(topLeftPointScene.toPoint())<<matrix().map(bottomRightPointScene.toPoint());
+            qDebug()<<matrix();
+//            qDebug()<<rectTransformed;
+            QImage patchTranformed=imageTransformed.copy(rectTransformed);
+            QString nameStrTranformed;
+            nameStrTranformed="Tranformed"+QString::number(count).append(".jpg");
+            patchTranformed.save(nameStrTranformed);
+
             QImage patch;
             patch=backgroundImage.copy(rect);//使用copy进行处理的是背景图
+
             QString nameStr;
             nameStr=QString::number(count).append(".jpg");
 
@@ -136,7 +162,6 @@ void MyQGraphicsView::copyBackgroundImage()
 //    QTransform transformMat=transform();
 //    patch=backgroundImage.transformed(transformMat);
 //    isSucceed= patch.save("1.jpg","JPG",100);
-
 }
 
 
@@ -178,7 +203,18 @@ void MyQGraphicsView::drawBackground(QPainter *painter, const QRectF &rect)
 {
     //sceneRect This property holds the area of the scene visualized by this view.
     painter->drawPixmap(int(sceneRect().left()),int(sceneRect().top()), backgroundPic);//画出背景图
+    //Returns the current transformation matrix for the view.
+    qDebug()<<"matrix:"<<matrix().m11()<<matrix().m12()<<0<<";"<<matrix().m21()<<matrix().m22()<<0<<";"<<matrix().dx()<<matrix().dy()<<1;
+//    Returns a matrix that maps viewport coordinates to scene coordinates.
+    qDebug()<<"viewportTransform"<<viewportTransform().m11()<<viewportTransform().m12()<<viewportTransform().m13()<<";"<<viewportTransform().m21()<<viewportTransform().m22()
+           <<viewportTransform().m23()<<";"<<viewportTransform().m31()<<viewportTransform().m32()<<viewportTransform().m33();
+    qDebug()<<"viewportTransform,invert"<<viewportTransform().inverted().m11()<<viewportTransform().inverted().m12()<<viewportTransform().inverted().m13()<<";"<<viewportTransform().inverted().m21()<<viewportTransform().inverted().m22()
+           <<viewportTransform().inverted().m23()<<";"<<viewportTransform().inverted().m31()<<viewportTransform().inverted().m32()<<viewportTransform().inverted().m33();
 
+//    qDebug()<<mapToScene(width()/2,height()/2);
+    qDebug()<<"translate:"<<mapToScene(0,0);
+    qDebug()<<"Viewport:100,100 scene:"<<mapFromScene(100,100);
+    qDebug()<<" ";
 }
 
 void MyQGraphicsView::initBoundary(){
@@ -213,7 +249,7 @@ void MyQGraphicsView::initBoundary(){
 void MyQGraphicsView::paintEvent(QPaintEvent *event){
     QGraphicsView::paintEvent(event);
 
-    //画边界新函数
+    //画边界的新函数
     QPainter painter(this->viewport());
     painter.setPen(QPen(Qt::red,4));
     painter.drawLine(verticalLine1topView,verticalLine1ButtonView);

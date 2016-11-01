@@ -1,4 +1,4 @@
-﻿ #include "centerqmainwidget.h"
+﻿#include "centerqmainwidget.h"
 #include "myqgraphicsview.h"
 #include "myqgraphicsscene.h"
 #include <QGraphicsPolygonItem>
@@ -26,12 +26,7 @@
 #endif
 
 
-int CenterQMainWidget::table[]={0,0,0,0,0,0,
-                           0,1,2,3,4,0,
-                           0,5,6,7,8,0,
-                           0,9,10,11,12,0,
-                           0,0, 0, 0, 0,0};
-int CenterQMainWidget::table2[5][6]={0,0,0,0,0,0,
+int CenterQMainWidget::table2d[5][6]={0,0,0,0,0,0,
                                       0,1,2,3,4,0,
                                       0,5,6,7,8,0,
                                       0,9,10,11,12,0,
@@ -156,7 +151,7 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     m_pManager=new QNetworkAccessManager(this); //QNetworkAccessManager
     connect(m_pManager,SIGNAL(finished(QNetworkReply*)),this,SLOT(slot_replyFinished(QNetworkReply*)));
 
-//测试 http post
+//测试 http post 上传底图
 //    QUrl url =QUrl(m_host+"image/");
 //    QNetworkRequest & uploadImageRequest=QNetworkRequest(url);
 //    uploadImageRequest.setHeader(QNetworkRequest::ContentTypeHeader,"image/jpeg");
@@ -168,8 +163,7 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 //        recombinationNode->setId(i);
 //        recombinationNodeList.append(recombinationNode);
 //    }
-    QPoint t(4000,3000);
-    calPointRegionId(t);
+
 }
 
 CenterQMainWidget::~CenterQMainWidget()
@@ -317,10 +311,10 @@ void CenterQMainWidget::slot_calcTopologicalData(){
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
         CuttingNode* cuttingNodeTemp=iterator.next();
 
-        //!算法输入数据：摄像机的世界坐标系标定坐标  QVector<QPointF> areaWorld
+        //!算法输入数据：摄像机的世界坐标系标定坐标                   世界坐标系
         QVector<QPointF> areaWorld=cuttingNodeTemp->getArea();
 
-        //!转换为观察坐标系、视口坐标系，宽高为graphicsView的宽高。
+        //!转换为观察坐标系、视口坐标系，宽高为graphicsView的宽高。    视口坐标系
         //摄像机的标定坐标 观察坐标系 areaObserve
         QVector<QPointF> areaObserve(0);
         for (int i = 0; i < areaWorld.size(); ++i) {
@@ -328,7 +322,7 @@ void CenterQMainWidget::slot_calcTopologicalData(){
             areaObserve<<pTemp;
         }
 
-        //!转换成拼接屏坐标系 QVector<QPointF> areaTV(0)
+        //!转换成拼接屏坐标系 QVector<QPointF> areaTV(0)          拼接屏坐标系 7680*3240
         //摄像机的标定坐标 电视墙坐标系 即为id=1的拼接屏坐标
         QVector<QPointF> areaTV(0);
         for (int i = 0; i < areaObserve.size(); ++i) {
@@ -374,55 +368,30 @@ void CenterQMainWidget::slot_calcTopologicalData(){
 
         //切分节点需要发到哪些节点上。
         QList<int> mat;
-        // segmentYTvList.size()+1 * segmentXTvList.size()+1 的mat
-        int matrixRow=cuttingYTvList.size()+1;
-        int matrixCol=cuttingXTvList.size()+1;
+        //左上角点
+        int topLeftXcolId=calXcloId(polygonAreaRectTopLeftX);
+        int TopLeftYrowId=calYrowId(polygonAreaRectTopLeftY);
+        //右下角点
+        int BottonRightXcldId=calXcloId(polygonAreaRectBottonRightX);
+        int BottonRightYrowId=calYrowId(polygonAreaRectBottonRightY);
+
+        int matrixCol=BottonRightXcldId-topLeftXcolId+1;
+        int matrixRow=BottonRightYrowId-TopLeftYrowId+1;
 //        qDebug()<<QString::number(matrixRow).toLatin1()<<"*"<<QString::number(matrixCol).toLatin1();
 
-        if(matrixRow==1 && matrixCol==1){
-                mat<<calPointRegionId(QPoint(polygonAreaRectTopLeftX,polygonAreaRectTopLeftY));
-        }else{
-            int xStart=0,yStart=0;//起始区间
-
-            if(cuttingXTvList.length()!=0){//垂直方向有被切分
-                xStart=cuttingXTvList.at(0);
-            }else{//垂直方向没有被切分，则要判断区间
-                for(int i=0;i<myQGraphicsView->verticalLineList.size()-1;i++){
-                    if(polygonAreaRectTopLeftX  >=  myQGraphicsView->verticalLineList.at(i) &&
-                            polygonAreaRectBottonRightX <= myQGraphicsView->verticalLineList.at(i+1)){
-                        xStart=i+1;
-                        break;
-                    }
-                }
-            }
-            if(cuttingYTvList.length()!=0){
-                yStart=cuttingYTvList.at(0);
-            }else{//水平方向没有被切分，则要判断区间
-                for(int i=0;i<myQGraphicsView->horizontalLineList.size()-1;i++){
-                    if(polygonAreaRectTopLeftY  >=  myQGraphicsView->horizontalLineList.at(i) &&
-                            polygonAreaRectBottonRightY <= myQGraphicsView->horizontalLineList.at(i+1)){
-                        yStart=i+1;
-                        break;
-                        }
-                    }
-            }
-
-            int xPlusY_Start=xStart+yStart*6;
-            for(int i=0;i<matrixRow;i++){   //行
-                for(int j=0;j<matrixCol;j++){   //列
-                    mat.append(table[xPlusY_Start+i*6+j]);
-                }
+        for(int i=TopLeftYrowId;i<=BottonRightYrowId;i++){
+            for(int j=topLeftXcolId;j<=BottonRightXcldId;j++){
+               mat<<table2d[i][j];
             }
         }
         cuttingNodeTemp->setMat(mat);
         cuttingNodeTemp->setMatrixCol(matrixCol);
         cuttingNodeTemp->setMatrixRow(matrixRow);
+//        qDebug()<<mat;
 
-        qDebug()<<mat;
         //! 有覆盖的重组节点处加入信息
         //! 遍历当前切分节点的拓扑矩阵
         for(int i=0;i<mat.size();i++){
-
             int idFromMat= mat[i];//id :1~12还有0
             if(idFromMat==0){
                 continue;
@@ -432,10 +401,8 @@ void CenterQMainWidget::slot_calcTopologicalData(){
 
             QVector<QPointF> fourPoints=translateById(areaTV,idFromMat);
             recombinationNodeTemp->appendFourPointsList(fourPoints);
-
 //            qDebug()<<recombinationNodeTemp->getFourPointsList();
         }
-
 
     }//遍历切分节点循环结束。
 
@@ -451,33 +418,48 @@ QVector<QPointF> CenterQMainWidget::translateById(QVector<QPointF> areaTv,int id
     return translatePoints;
 }
 
-int CenterQMainWidget::calPointRegionId(QPointF point)
+
+//计算x值的区域列编号
+int CenterQMainWidget::calXcloId(qreal x)
 {
     int colId=myQGraphicsView->verticalLineList.size();//列id 初始值为下方循环判断的缺失情况。 012345
-    int rowId=myQGraphicsView->horizontalLineList.size();//行id  01234
-    qreal x=point.x();
-    qreal y=point.y();
     for(int i=0;i<myQGraphicsView->verticalLineList.size();i++){
         if(x <= myQGraphicsView->verticalLineList.at(i)){
          colId=i;
          break;
         }
     }
+    return colId;
+}
+//计算y值的区域行编号
+int CenterQMainWidget::calYrowId(qreal y)
+{
+    int rowId=myQGraphicsView->horizontalLineList.size();//行id  01234
     for(int i=0;i<myQGraphicsView->horizontalLineList.size();i++){
         if(y <= myQGraphicsView->horizontalLineList.at(i)){
          rowId=i;
          break;
         }
     }
+    return rowId;
+}
 
-    int id=table2[rowId][colId];//查表获得
+int CenterQMainWidget::calPointRegionId(QPointF point)
+{
+    qreal x=point.x();
+    int colId = calXcloId(x);
+
+    qreal y=point.y();
+    int rowId = calYrowId(y);
+
+    int id=table2d[rowId][colId];//查表获得
 
     return id;
 }
 
 void CenterQMainWidget::slot_uploadBackgroundImage(){
     //保存12张图片，主线程中执行
-    myQGraphicsView->copyBackgroundImage();
+    myQGraphicsView->copyBackgroundImage();//复制背景图片到文件夹下
 
     QProgressDialog progress("Uploading images...", "Abort uploading", 0, 12, this);
     progress.setWindowModality(Qt::WindowModal);
@@ -493,7 +475,6 @@ void CenterQMainWidget::slot_uploadBackgroundImage(){
 
         QString ip=recombinationNodeTemp->ip();
         Myhttpclient myhttpclient;
-
 
         QString imageName;
         imageName=QString::number(id).append(".jpg");
@@ -584,6 +565,7 @@ void CenterQMainWidget::slot_upLoadData(){
             variantMap.insert("toploMat",receivedListString);
             variantMap.insert("position",position);
             variantMap.insert("fourpoints",fourPoints);
+            variantMap.insert("ispointchange",1);
 
             QJsonDocument jsonDocument = QJsonDocument::fromVariant(variantMap);
 

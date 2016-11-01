@@ -2,7 +2,7 @@
 #define MYQMAINWINDOW_H
 
 #include <QMainWindow>
-#include<QNetworkRequest>
+#include <QNetworkRequest>
 #include "cuttingNode.h"
 
 //前置声明
@@ -19,14 +19,13 @@ class CenterQMainWidget : public QWidget
 {
     Q_OBJECT
 public:
-    //声明为explicit的构造函数不能在隐式转换中使用。
-    explicit CenterQMainWidget(QWidget *parent = 0);
+    explicit CenterQMainWidget(QWidget *parent = 0);    //声明为explicit的构造函数不能在隐式转换中使用。
     ~CenterQMainWidget();
     //电视墙排列
-static int table[30];
+static int table2d[5][6];
 
-static int table2[5][6];
-
+int calXcloId(qreal x);
+int calYrowId(qreal y);
 signals:
 //槽函数
 public slots:
