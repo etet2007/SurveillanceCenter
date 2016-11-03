@@ -95,7 +95,7 @@ void MyQGraphicsView::copyBackgroundImage()
     //1，取得小屏幕显示区域位置（先形成观察坐标系再转世界坐标系，使用Rect就不用考虑缩放）
     //2，裁剪似乎暂时只有 QImage::copy取出某图像的某个矩形区域，无法取出旋转了的区域
 
-    //会卡，旋转时失效，因为现在只通过两点世界坐标系。
+    //会卡，旋转时失效，因为现在只通过世界坐标系两点。
 
     QProgressDialog progress("Copying images...", "Abort Copy", 0, 12, this);
     progress.setWindowModality(Qt::WindowModal);
@@ -104,9 +104,9 @@ void MyQGraphicsView::copyBackgroundImage()
 
     //测试旋转
     QImage imageTransformed=backgroundImage.transformed(matrix());
-    imageTransformed.save("imageTransformed.jpg");
-
-
+    QMatrix tureMatrix=QImage::trueMatrix(matrix(),backgroundImage.width(),backgroundImage.height());//必须使用tureMatrix才不会出错
+//    qDebug()<<"tureMatrix "<<tureMatrix;
+//    imageTransformed.save("imageTransformed.jpg");
 
     bool isSucceed;
     int count=1;
@@ -116,40 +116,25 @@ void MyQGraphicsView::copyBackgroundImage()
             QPoint bottomRightPoint(verticalLineList.at(i+1)/ratio,horizontalLineList.at(j+1)/ratio);
             QPointF topLeftPointScene = mapToScene(topLeftPoint);
             QPointF bottomRightPointScene = mapToScene(bottomRightPoint);
-            qDebug()<<"topLeftPointScene,bottomRightPointScene"<<topLeftPointScene<<bottomRightPointScene;
+//            qDebug()<<"topLeftPointScene,bottomRightPointScene"<<topLeftPointScene<<bottomRightPointScene;
 //            qDebug()<<mapToScene();
-            QRect rect;
-            rect.setTopLeft(topLeftPointScene.toPoint());
-            rect.setBottomRight(bottomRightPointScene.toPoint());
-
-
-
-//            topLeftPointScene,bottomRightPointScene QPointF(3677.64,1876.58) QPointF(4133.93,1910.97)
-//            QPoint(2540,3256) QPoint(2939,3479)
-//            QMatrix(11=0.906308 12=0.422618 21=-0.422618 22=0.906308 dx=0 dy=0)
 
             QRect rectTransformed;
-            rectTransformed.setTopLeft(matrix().map(topLeftPointScene.toPoint()));
-            rectTransformed.setBottomRight(matrix().map(bottomRightPointScene.toPoint()));
-            qDebug()<<matrix().map(topLeftPointScene.toPoint())<<matrix().map(bottomRightPointScene.toPoint());
-            qDebug()<<matrix();
+            rectTransformed.setTopLeft(tureMatrix.map(topLeftPointScene.toPoint()));
+            rectTransformed.setBottomRight(tureMatrix.map(bottomRightPointScene.toPoint()));
+//            qDebug()<<matrix();
 //            qDebug()<<rectTransformed;
+
             QImage patchTranformed=imageTransformed.copy(rectTransformed);
             QString nameStrTranformed;
-            nameStrTranformed="Tranformed"+QString::number(count).append(".jpg");
-            patchTranformed.save(nameStrTranformed);
-
-            QImage patch;
-            patch=backgroundImage.copy(rect);//使用copy进行处理的是背景图
-
-            QString nameStr;
-            nameStr=QString::number(count).append(".jpg");
+            nameStrTranformed=QString::number(count).append(".jpg");
 
             progress.setValue(count);
 
             count++;
-            patch=patch.scaled(1920,1080);
-            isSucceed= patch.save(nameStr,"JPG",100);
+            patchTranformed=patchTranformed.scaled(1920,1080);
+            isSucceed= patchTranformed.save(nameStrTranformed,"JPG",100);
+
             if(!isSucceed){
                 QMessageBox msgBox;
                 msgBox.setText(tr("保存失败"));
@@ -158,10 +143,6 @@ void MyQGraphicsView::copyBackgroundImage()
         }
     }
 
-
-//    QTransform transformMat=transform();
-//    patch=backgroundImage.transformed(transformMat);
-//    isSucceed= patch.save("1.jpg","JPG",100);
 }
 
 
