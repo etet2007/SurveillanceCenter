@@ -41,12 +41,17 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
     QPalette pal = palette();
     pal.setBrush(backgroundRole(), m_tile);
     setPalette(pal);
+
+    //ViewportAnchor这个属性控制这当转换时候view应该如何摆放场景的位置
+//    setTransformationAnchor(QGraphicsView::NoAnchor);//就是因为这个值，才会以中心点为坐标。
+//    setTransform(QTransform(1,0,0 ,0,1,0 ,-3709,-1689,1));
+//    qDebug()<<mapToScene(0,0);
 }
 
 //!读取图片
 void MyQGraphicsView::readBackgroundPic()
 {
-    if(!backgroundImage.load( "G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\background.bmp" )){
+    if(!backgroundImage.load( "G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\sandboxie.jpg" )){
         QMessageBox msgBox;
         msgBox.setText(tr("读取图片失败"));
         msgBox.exec();
@@ -57,7 +62,6 @@ void MyQGraphicsView::readBackgroundPic()
     if(backgroundPic.isNull()){
     qDebug("empty");
     }
-
 }
 
 QString MyQGraphicsView::getViewArea(){
@@ -103,21 +107,41 @@ void MyQGraphicsView::copyBackgroundImage()
     progress.show();
 
     //测试旋转
-    QImage imageTransformed=backgroundImage.transformed(matrix());
-    QMatrix tureMatrix=QImage::trueMatrix(matrix(),backgroundImage.width(),backgroundImage.height());//必须使用tureMatrix才不会出错
-//    qDebug()<<"tureMatrix "<<tureMatrix;
+    QImage imageTransformed=backgroundImage.transformed(roateMat,Qt::SmoothTransformation);
+//    qDebug()<<imageTransformed.width()<<imageTransformed.height();
+
+    QMatrix tureMatrix=QImage::trueMatrix(roateMat,backgroundImage.width(),backgroundImage.height());//必须使用tureMatrix才不会出错
+    //验证对tureMatrix理解的正确性，使用roateMat映射图片的四点坐标后，求外包矩形左上角。
+    QRect rectTransformed =roateMat.mapRect(QRect(0,0,backgroundImage.width(),backgroundImage.height()));
+    qDebug()<<"topleft"<<rectTransformed.topLeft();
+    qDebug()<<"tureMatrix "<<tureMatrix;
+
+    //保存旋转后的图片
 //    imageTransformed.save("imageTransformed.jpg");
 
     bool isSucceed;
     int count=1;
     for(int j=0;j<horizontalLineList.size()-1;j++){
         for(int i=0;i<verticalLineList.size()-1;i++){
+            //电视墙边界
             QPoint topLeftPoint(verticalLineList.at(i)/ratio,horizontalLineList.at(j)/ratio);
             QPoint bottomRightPoint(verticalLineList.at(i+1)/ratio,horizontalLineList.at(j+1)/ratio);
+            //转换到世界坐标系
             QPointF topLeftPointScene = mapToScene(topLeftPoint);
             QPointF bottomRightPointScene = mapToScene(bottomRightPoint);
 //            qDebug()<<"topLeftPointScene,bottomRightPointScene"<<topLeftPointScene<<bottomRightPointScene;
 //            qDebug()<<mapToScene();
+
+            //old code
+            QRect rect;
+            rect.setTopLeft(topLeftPointScene.toPoint());
+            rect.setBottomRight(bottomRightPointScene.toPoint());
+            QImage patch;
+            patch=backgroundImage.copy(rect);//使用copy进行处理的是背景图
+            QString nameStr="old"+QString::number(count).append(".jpg");
+            patch=patch.scaled(1920,1080);
+            isSucceed= patch.save(nameStr,"JPG",100);
+
 
             QRect rectTransformed;
             rectTransformed.setTopLeft(tureMatrix.map(topLeftPointScene.toPoint()));
@@ -126,13 +150,13 @@ void MyQGraphicsView::copyBackgroundImage()
 //            qDebug()<<rectTransformed;
 
             QImage patchTranformed=imageTransformed.copy(rectTransformed);
-            QString nameStrTranformed;
-            nameStrTranformed=QString::number(count).append(".jpg");
+            QString nameStrTranformed=QString::number(count).append(".jpg");
+//            qDebug()<<patchTranformed.width()<<patchTranformed.height();
 
             progress.setValue(count);
-
             count++;
-            patchTranformed=patchTranformed.scaled(1920,1080);
+
+            patchTranformed=patchTranformed.scaled(1920,1080,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
             isSucceed= patchTranformed.save(nameStrTranformed,"JPG",100);
 
             if(!isSucceed){
@@ -150,6 +174,7 @@ void MyQGraphicsView::copyBackgroundImage()
 void MyQGraphicsView::changeRotation(int rotation)
 {
     rotate(rotation-m_rotation);
+    roateMat.rotate(rotation-m_rotation);
     m_rotation=rotation;
 }
 
@@ -173,6 +198,11 @@ void MyQGraphicsView::changeScale(int value)
 
 void MyQGraphicsView::resetTransfrom()
 {
+//    setTransform(QTransform( 0.707107,0.707107,0 , -0.707107 ,0.707107 ,0 , -955.3931275 ,-4283.7977985 ,1));
+//    setTransform(QTransform( 1.5         ,                0         ,          -5963.5 ,
+//                             0                       1.5                  -2702.25
+//                             0                         0                         1));
+
     emit rotationChanged(0);
     emit scaleChanged(50);
 }
@@ -184,17 +214,18 @@ void MyQGraphicsView::drawBackground(QPainter *painter, const QRectF &rect)
 {
     //sceneRect This property holds the area of the scene visualized by this view.
     painter->drawPixmap(int(sceneRect().left()),int(sceneRect().top()), backgroundPic);//画出背景图
-    //Returns the current transformation matrix for the view.
-    qDebug()<<"matrix:"<<matrix().m11()<<matrix().m12()<<0<<";"<<matrix().m21()<<matrix().m22()<<0<<";"<<matrix().dx()<<matrix().dy()<<1;
-//    Returns a matrix that maps viewport coordinates to scene coordinates.
-    qDebug()<<"viewportTransform"<<viewportTransform().m11()<<viewportTransform().m12()<<viewportTransform().m13()<<";"<<viewportTransform().m21()<<viewportTransform().m22()
-           <<viewportTransform().m23()<<";"<<viewportTransform().m31()<<viewportTransform().m32()<<viewportTransform().m33();
-    qDebug()<<"viewportTransform,invert"<<viewportTransform().inverted().m11()<<viewportTransform().inverted().m12()<<viewportTransform().inverted().m13()<<";"<<viewportTransform().inverted().m21()<<viewportTransform().inverted().m22()
-           <<viewportTransform().inverted().m23()<<";"<<viewportTransform().inverted().m31()<<viewportTransform().inverted().m32()<<viewportTransform().inverted().m33();
 
-//    qDebug()<<mapToScene(width()/2,height()/2);
+//    Returns the current transformation matrix for the view.
+//    qDebug()<<"matrix:"<<matrix().m11()<<matrix().m12()<<0<<";"<<matrix().m21()<<matrix().m22()<<0<<";"<<matrix().dx()<<matrix().dy()<<1;
+//    Returns a matrix that maps viewport coordinates to scene coordinates.
+    qDebug()<<"viewportTransform:"<<viewportTransform().m11()<<viewportTransform().m12()<<viewportTransform().m13()<<";"<<viewportTransform().m21()<<viewportTransform().m22()
+           <<viewportTransform().m23()<<";"<<viewportTransform().m31()<<viewportTransform().m32()<<viewportTransform().m33();
+    qDebug()<<"viewportTransform,inverted:"<<viewportTransform().inverted().m11()<<viewportTransform().inverted().m12()<<viewportTransform().inverted().m13()<<";"<<viewportTransform().inverted().m21()<<viewportTransform().inverted().m22()
+           <<viewportTransform().inverted().m23()<<";"<<viewportTransform().inverted().m31()<<viewportTransform().inverted().m32()<<viewportTransform().inverted().m33();
+    qDebug()<<"roateMat:"<<roateMat;
+    qDebug()<<"the point in the middle:"<<mapToScene(width()/2,height()/2);
     qDebug()<<"translate:"<<mapToScene(0,0);
-    qDebug()<<"Viewport:100,100 scene:"<<mapFromScene(100,100);
+    qDebug()<<"Scene coord:(100,100)    viewport:"<<mapFromScene(100,100);
     qDebug()<<" ";
 }
 

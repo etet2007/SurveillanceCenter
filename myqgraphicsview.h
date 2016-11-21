@@ -41,6 +41,7 @@ public:
 
     void copyBackgroundImage();
 
+    QMatrix roateMat;
 public slots:
     //旋转
     void changeRotation(int rotation);

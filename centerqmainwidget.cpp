@@ -164,6 +164,12 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 //        recombinationNodeList.append(recombinationNode);
 //    }
 
+
+//    myQGraphicsView->setMatrix(QMatrix(0.707106562373163,-0.707106562373163,
+//                                       0.707106562373163,0.707106562373163,
+//                                       -3928.90260879895   ,       5210.10085036635));
+
+
 }
 
 CenterQMainWidget::~CenterQMainWidget()
@@ -311,22 +317,22 @@ void CenterQMainWidget::slot_calcTopologicalData(){
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
         CuttingNode* cuttingNodeTemp=iterator.next();
 
-        //!算法输入数据：摄像机的世界坐标系标定坐标                   世界坐标系
+        //!算法输入数据：摄像机的世界坐标系标定坐标                   世界坐标系 areaWorld
         QVector<QPointF> areaWorld=cuttingNodeTemp->getArea();
 
-        //!转换为观察坐标系、视口坐标系，宽高为graphicsView的宽高。    视口坐标系
+        //!转换为观察坐标系、视口坐标系，宽高为graphicsView的宽高。    视口坐标系 areaViewport
         //摄像机的标定坐标 观察坐标系 areaObserve
-        QVector<QPointF> areaObserve(0);
+        QVector<QPointF> areaViewport(0);
         for (int i = 0; i < areaWorld.size(); ++i) {
             QPointF pTemp=myQGraphicsView->mapFromScene(areaWorld.at(i));
-            areaObserve<<pTemp;
+            areaViewport<<pTemp;
         }
 
         //!转换成拼接屏坐标系 QVector<QPointF> areaTV(0)          拼接屏坐标系 7680*3240
         //摄像机的标定坐标 电视墙坐标系 即为id=1的拼接屏坐标
         QVector<QPointF> areaTV(0);
-        for (int i = 0; i < areaObserve.size(); ++i) {
-            QPointF pTemp=areaObserve.at(i);
+        for (int i = 0; i < areaViewport.size(); ++i) {
+            QPointF pTemp=areaViewport.at(i);
             pTemp.setX(pTemp.x()*myQGraphicsView->ratio);
             pTemp.setY(pTemp.y()*myQGraphicsView->ratio);
             areaTV<<pTemp;
