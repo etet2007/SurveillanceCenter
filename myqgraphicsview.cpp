@@ -10,14 +10,27 @@
 #include<QDebug>
 #include<QProgressDialog>
 #include<QBitmap>
+#include <QSizePolicy>
+
+int MyQGraphicsView::heightForWidth( int w ){
+    return w;
+}
 
 MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 {
     m_rotation=0.0;
     m_scale=50;
+
+    ratio=(float)tvHeight/viewHeight;
+//    qDebug()<<"ratio:"<<ratio;
+
     //控件宽高,根据需求改变：http://blog.csdn.net/chlk118/article/details/24882641
     setFixedWidth(viewWidth);
     setFixedHeight(viewHeight);
+//暂时还不行
+//    QSizePolicy  tempSizePolicy(sizePolicy());
+//    tempSizePolicy .setHeightForWidth(true);
+//    setSizePolicy(tempSizePolicy);
 
     setDragMode(QGraphicsView::ScrollHandDrag);//在View中可以拖动
     initBoundary();
@@ -51,7 +64,7 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 //!读取图片
 void MyQGraphicsView::readBackgroundPic()
 {
-    if(!backgroundImage.load( "G:\\课程\\视屏监控全景融合与场景再现系统\\ExperimentData\\sandboxie.jpg" )){
+    if(!backgroundImage.load( "G://sandboxie.jpg" )){
         QMessageBox msgBox;
         msgBox.setText(tr("读取图片失败"));
         msgBox.exec();

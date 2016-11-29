@@ -21,7 +21,7 @@ public:
     static const int tvHeight=3240;
     static const int tvWidth=7680;
 
-    float ratio=4.8;
+    float ratio;
 
 //已经将下放的常量放入列表当中
     QList<int>  verticalLineList;
@@ -58,7 +58,11 @@ protected:
     void drawBackground(QPainter * painter, const QRectF & rect);
 
 //    void render(QPainter * painter, const QRectF & target = QRectF(), const QRect & source = QRect(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);//用于截屏
+int heightForWidth( int w );
+
 private:
+
+
     void MyQGraphicsView::paintEvent(QPaintEvent *event);
     //读取背景图
     void readBackgroundPic();
@@ -72,6 +76,7 @@ private:
     qreal m_rotation;
     qreal m_scale;
     qreal scaleFactor;
+
     //用于在View中显示电视墙边界线。把电视墙坐标系转换成观察坐标系。
     QPoint verticalLine1topView;
     QPoint verticalLine1ButtonView;

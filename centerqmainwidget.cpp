@@ -335,9 +335,19 @@ void CenterQMainWidget::slot_calcTopologicalData(){
             QPointF pTemp=areaViewport.at(i);
             pTemp.setX(pTemp.x()*myQGraphicsView->ratio);
             pTemp.setY(pTemp.y()*myQGraphicsView->ratio);
+            qDebug()<<"old pTemp"<<pTemp;
             areaTV<<pTemp;
         }
-
+//        //!转换成拼接屏坐标系 QVector<QPointF> areaTV(0)          拼接屏坐标系 7680*3240  使用归一化？
+//        //摄像机的标定坐标 电视墙坐标系 即为id=1的拼接屏坐标
+////        QVector<QPointF> areaTV(0);
+//        for (int i = 0; i < areaViewport.size(); ++i) {
+//            QPointF pTemp=areaViewport.at(i);
+//            pTemp.setX(pTemp.x()/myQGraphicsView->width()*myQGraphicsView->tvWidth);
+//            pTemp.setY(pTemp.y()/myQGraphicsView->height()*myQGraphicsView->tvHeight);
+//            qDebug()<<"new pTemp"<<pTemp;
+//            areaTV<<pTemp;
+//        }
 
         //!计算切分节点的切分坐标 segmentXModelList segmentYModelList基于模型坐标，可能为空
         QPolygonF polygonAreaTV(areaTV);

@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include "centerqmainwidget.h"
-
-//#include<QTextCodec>
 #include"recombinationNode.h"
 
 #include<QMenuBar>
