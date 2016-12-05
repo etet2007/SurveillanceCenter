@@ -40,6 +40,7 @@ public slots:
 
     void slot_cuttingNodeReplyReadyRead();
     void slot_recombinationNodeReplyReadyRead();
+    void slot_getCameraFrame(QListWidgetItem* listWidgetItem);
 
 
 private:
@@ -52,7 +53,8 @@ private:
     MyQGraphicsView *myQGraphicsView;
     MyQGraphicsScene *myQGraphicsScene;
     //1920*1080数组
-    QVector<QPointF> vectorStandard;
+    QVector<QPoint> vectorStandard;
+    QPolygon standardPolygon;
     //切分节点/摄像机列表
     QList<CuttingNode*> cuttingNodeList;
     //重组节点列表

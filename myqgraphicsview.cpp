@@ -1,4 +1,4 @@
-#include "myqgraphicsview.h"
+﻿#include "myqgraphicsview.h"
 #include "myqgraphicsscene.h"
 
 #include <QGraphicsView>
@@ -64,7 +64,7 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 //!读取图片
 void MyQGraphicsView::readBackgroundPic()
 {
-    if(!backgroundImage.load( "G://sandboxie.jpg" )){
+    if(!backgroundImage.load( "G://para.bmp" )){
         QMessageBox msgBox;
         msgBox.setText(tr("读取图片失败"));
         msgBox.exec();
@@ -231,15 +231,15 @@ void MyQGraphicsView::drawBackground(QPainter *painter, const QRectF &rect)
 //    Returns the current transformation matrix for the view.
 //    qDebug()<<"matrix:"<<matrix().m11()<<matrix().m12()<<0<<";"<<matrix().m21()<<matrix().m22()<<0<<";"<<matrix().dx()<<matrix().dy()<<1;
 //    Returns a matrix that maps viewport coordinates to scene coordinates.
-    qDebug()<<"viewportTransform:"<<viewportTransform().m11()<<viewportTransform().m12()<<viewportTransform().m13()<<";"<<viewportTransform().m21()<<viewportTransform().m22()
-           <<viewportTransform().m23()<<";"<<viewportTransform().m31()<<viewportTransform().m32()<<viewportTransform().m33();
-    qDebug()<<"viewportTransform,inverted:"<<viewportTransform().inverted().m11()<<viewportTransform().inverted().m12()<<viewportTransform().inverted().m13()<<";"<<viewportTransform().inverted().m21()<<viewportTransform().inverted().m22()
-           <<viewportTransform().inverted().m23()<<";"<<viewportTransform().inverted().m31()<<viewportTransform().inverted().m32()<<viewportTransform().inverted().m33();
-    qDebug()<<"roateMat:"<<roateMat;
-    qDebug()<<"the point in the middle:"<<mapToScene(width()/2,height()/2);
-    qDebug()<<"translate:"<<mapToScene(0,0);
-    qDebug()<<"Scene coord:(100,100)    viewport:"<<mapFromScene(100,100);
-    qDebug()<<" ";
+//    qDebug()<<"viewportTransform:"<<viewportTransform().m11()<<viewportTransform().m12()<<viewportTransform().m13()<<";"<<viewportTransform().m21()<<viewportTransform().m22()
+//           <<viewportTransform().m23()<<";"<<viewportTransform().m31()<<viewportTransform().m32()<<viewportTransform().m33();
+//    qDebug()<<"viewportTransform,inverted:"<<viewportTransform().inverted().m11()<<viewportTransform().inverted().m12()<<viewportTransform().inverted().m13()<<";"<<viewportTransform().inverted().m21()<<viewportTransform().inverted().m22()
+//           <<viewportTransform().inverted().m23()<<";"<<viewportTransform().inverted().m31()<<viewportTransform().inverted().m32()<<viewportTransform().inverted().m33();
+//    qDebug()<<"roateMat:"<<roateMat;
+//    qDebug()<<"the point in the middle:"<<mapToScene(width()/2,height()/2);
+//    qDebug()<<"translate:"<<mapToScene(0,0);
+//    qDebug()<<"Scene coord:(100,100)    viewport:"<<mapFromScene(100,100);
+//    qDebug()<<" ";
 }
 
 void MyQGraphicsView::initBoundary(){

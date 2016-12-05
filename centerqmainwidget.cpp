@@ -20,6 +20,9 @@
 #include "recombinationNode.h"
 #include "ClientDLL.h"
 #include <QGraphicsVideoItem>
+#include <QMediaPlayer>
+
+#include"NET_SDK_Encode.h"
 
 #if _MSC_VER >= 1600
 #pragma execution_character_set("utf-8")
@@ -37,6 +40,7 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     //设置窗口大小、标题
     setWindowState(Qt::WindowMaximized);
     setWindowTitle("Surveillance Center");
+
     //初始化myQGraphicsScene，父控件释放后会自动释放
     myQGraphicsScene=new MyQGraphicsScene();
 
@@ -49,12 +53,12 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     cuttingnodePutUrl=m_host+"cuttingnode/";
     recombinationnodePutUrl=m_host+"recombinationnode/";
 
-    QPointF p1Standard(0,0);
-    QPointF p2Standard(1920,0);
-    QPointF p3Standard(1920,1080);
-    QPointF p4Standard(0,1080);
+    QPoint p1Standard(0,0);
+    QPoint p2Standard(1920,0);
+    QPoint p3Standard(1920,1080);
+    QPoint p4Standard(0,1080);
     vectorStandard<<p1Standard<<p2Standard<<p3Standard<<p4Standard;
-
+    standardPolygon=QPolygon(vectorStandard);
     //右边控制栏 mainGroupBox 包含所有东西
     QGroupBox *mainGroupBox = new QGroupBox(this);
     mainGroupBox->setFixedWidth(250);
@@ -95,6 +99,7 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     //摄像机参数列表
     cameraListWidget = new QListWidget(mainGroupBox);
     cameraListWidget->setMouseTracking(true);
+    connect(cameraListWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)),this, SLOT(slot_getCameraFrame(QListWidgetItem*)));
 
     //计算按钮
     QPushButton *calcButton = new QPushButton(mainGroupBox);
@@ -112,7 +117,7 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     uploadBackgroundImageButton->setText("上传底图");
     connect(uploadBackgroundImageButton, SIGNAL(clicked(bool)), this, SLOT(slot_uploadBackgroundImage()));
 
-    //上传底图按钮
+    //图像配准按钮
     QPushButton *openRegisterDialog = new QPushButton(mainGroupBox);
     openRegisterDialog->setText("图像配准");
     connect(openRegisterDialog, SIGNAL(clicked(bool)), this, SLOT(slot_openRegisterDialog()));
@@ -164,11 +169,15 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 //        recombinationNodeList.append(recombinationNode);
 //    }
 
+//    QMediaPlayer *player = new QMediaPlayer(this);
 
-//    myQGraphicsView->setMatrix(QMatrix(0.707106562373163,-0.707106562373163,
-//                                       0.707106562373163,0.707106562373163,
-//                                       -3928.90260879895   ,       5210.10085036635));
+//    QGraphicsVideoItem *item = new QGraphicsVideoItem;
+//    player->setVideoOutput(item);
+//    myQGraphicsView->scene()->addItem(item);
 
+//    myQGraphicsView->show();
+//    player->setMedia(QUrl("rtsp://admin:admin@12345@192.168.153.201:554/h264/ch1/main/av_stream"));
+//    player->play();
 
 }
 
@@ -190,8 +199,6 @@ void CenterQMainWidget::slot_requestData()
 
     //读取全景显示范围      QList<QPointF>存储
     QString areaString=myQGraphicsView->getViewArea();
-
-    //http://192.168.153.209:8000/snippets/?format=json
 
     QString cuttingNodeUrl=m_host+"cuttingnode/search/"+areaString+"/?format=json";
     QString recombinationNodeUrl=m_host+"recombinationnode/?format=json";
@@ -597,19 +604,22 @@ void CenterQMainWidget::slot_openRegisterDialog()
 {
         QProcess *myProcess = new QProcess(parentWidget());
         myProcess->start("E:\\Workspace\\VisualStudioWorkspace\\互信息校准测试\\x64\\Debug\\互信息校准测试.exe");
+
 }
 
 
 void CenterQMainWidget::slot_cuttingNodeReplyReadyRead()
 {
     QString all=cuttingNodeReply->readAll();
+
     //转为Array
     QJsonParseError json_error;
     QJsonArray qJsonArray=QJsonDocument::fromJson(all.toLatin1(),&json_error).array();
 
     if(json_error.error!=QJsonParseError::NoError){
         QMessageBox msgBox;
-        msgBox.setText(tr("Json解析错误"));
+        msgBox.setText(tr("cuttingNode Json解析错误"));
+           qDebug()<<all;
         msgBox.exec();
         return;
     }
@@ -631,8 +641,8 @@ void CenterQMainWidget::slot_cuttingNodeReplyReadyRead()
         xd=qJsonObject["xd"].toString();
         yd=qJsonObject["yd"].toString();
 
-        QPointF p1(xa.toFloat(),yb.toFloat());
-        QPointF p2(xb.toFloat(),ya.toFloat());
+        QPointF p1(xa.toFloat(),ya.toFloat());
+        QPointF p2(xb.toFloat(),yb.toFloat());
         QPointF p3(xc.toFloat(),yc.toFloat());
         QPointF p4(xd.toFloat(),yd.toFloat());
         QVector<QPointF> vectorTemp(0);
@@ -663,13 +673,16 @@ void CenterQMainWidget::slot_cuttingNodeReplyReadyRead()
 void CenterQMainWidget::slot_recombinationNodeReplyReadyRead(){
     QString all=recombinationNodeReply->readAll();
 
+//"[{\"id\":1,\"ip\":\"192.168.0.1\",\"toploMat\":\"\",\"position\":\"\",\"fourpoints\":\"\",\"ispointchange\":\"1\"},{\"id\":2,\"ip\":\"192.168.0.2\",\"toploMat\":\"192.168.153.201\",\"position\":\"\",\"fourpoints\":\"700,2486,1756,67,3499,1584,2870,2908\",\"ispointchange\":\"1\"},{\"id\":3,\"ip\":\"192.168.0.3\",\"toploMat\":\"192.168.153.201\",\"position\":\"\",\"fourpoints\":\"-1219,2486,-163,67,1579,1584,950,2908\",\"ispointchange\":\"1\"},{\"id\":4,\"ip\":\"192.168.0.4\",\"toploMat\":\"\",\"position\":\"\",\"fourpoints\":\"\",\"ispointchange\":\"1\"},{\"id\":5,\"ip\":\"192.168.0.5\",\"toploMat\":\"\",\"position\":\"\",\"fourpoints\":\"\",\"ispointchange\":\"1\"},{\"id\":6,\"ip\":\"192.168.0.6\",\"toploMat\":\"192.168.153.201\",\"position\":\"\",\"fourpoints\":\"700,1406,1756,-1012,3499,504,2870,1828\",\"ispointchange\":\"1\"},{\"id\":7,\"ip\":\"192.168.0.7\",\"toploMat\":\"192.168.153.201\",\"position\":\"\",\"fourpoints\":\"-1219,1406,-163,-1012,1579,504,950,1828\",\"ispointchange\":\"1\"},{\"id\":8,\"ip\":\"192.168.0.8\",\"toploMat\":\"\",\"position\":\"\",\"fourpoints\":\"\",\"ispointchange\":\"1\"},{\"id\":9,\"ip\":\"192.168.0.9\",\"toploMat\":\"\",\"position\":\"\",\"fourpoints\":\"\",\"ispointchange\":\"1\"},{\"id\":10,\"ip\":\"192.168.0.10\",\"toploMat\":\"192.168.153.201\",\"position\":\"\",\"fourpoints\":\"700,326,1756,-2092,3499,-575,2870,748\",\"ispointchange\":\"1\"},{\"id\":11,\"ip\":\"192.168.0.11\",\"toploMat\":\"192.168.153.201\",\"position\":\"\",\"fourpoints\":\"-1219,326,-163,-2092,1579,-575,950,748\",\"ispointchange\":\"1\"},{\"id\":12,\"ip\":\"192.168.0.12\",\"toploMat\":\"\",\"position\":\"\",\"fourpoints\":\"\",\"ispointchange\":\"1\"}]"
     //转为Array
     QJsonParseError json_error;
     QJsonArray qJsonArray=QJsonDocument::fromJson(all.toLatin1(),&json_error).array();
 
     if(json_error.error!=QJsonParseError::NoError){
         QMessageBox msgBox;
-        msgBox.setText(tr("Json解析错误"));
+        msgBox.setText(tr("recombinationNode Json解析错误"));
+        qDebug()<<all.toLatin1();
+        qDebug()<<json_error.error;
         msgBox.exec();
         return;
     }
@@ -701,6 +714,42 @@ void CenterQMainWidget::slot_recombinationNodeReplyReadyRead(){
 
     QTimer::singleShot(4000, msgBox, SLOT(close()));
     recombinationNodeReply->deleteLater();
+}
+
+void CenterQMainWidget::slot_getCameraFrame(QListWidgetItem* listWidgetItem)
+{
+    //获取listWidgetItem的text字符串
+    QString cameraIp=listWidgetItem->text();
+    //获取摄像机某帧的函数
+    int isSucceed=readCamera(cameraIp);
+    qDebug()<<"isSucceed "<<isSucceed;
+    if(isSucceed>=0){
+        qDebug()<<"isSucceed";
+        QPixmap framePixmap(cameraIp+QString(".jpg"));
+        if(!framePixmap.isNull()){
+         QGraphicsPixmapItem* pixmapItem=new QGraphicsPixmapItem(framePixmap);
+         CuttingNode* cuttingNodeTemp=cameraToListWidgetItemMap.key(listWidgetItem);
+         if(cuttingNodeTemp!=NULL){
+
+             QTransform t;
+             QTransform::quadToQuad(standardPolygon,cuttingNodeTemp->getPolygonItem()->polygon(),t);
+
+             pixmapItem->setTransform(t);//暂时这个数值不对
+             myQGraphicsScene->addItem(pixmapItem);
+         }
+        }
+    }
+
+
+    //测试使用ffplay打开视频
+        QProcess *myProcess = new QProcess(parentWidget());
+        QString program = "./ffmpeg/ffplay.exe";
+        QString head="rtsp://admin:admin@12345@";
+        QString tail=":554/h264/ch1/main/av_stream";
+        QStringList arguments;
+        arguments<<head+cameraIp+tail;
+        qDebug()<<arguments;
+        myProcess->start(program,arguments);
 }
 
 void CenterQMainWidget::addItems(){

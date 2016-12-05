@@ -1,9 +1,12 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include <QApplication>
 #include "centerqmainwidget.h"
 #include"recombinationNode.h"
 
 #include<QMenuBar>
+
+#include"NET_SDK_Encode.h"
+
 int main(int argc, char *argv[])
 {
     //QApplication对象
@@ -15,9 +18,10 @@ int main(int argc, char *argv[])
     font.setBold(true);
     qApplication.setFont(font);
 
+//    readCamera(NULL);
+
     CenterQMainWidget *myQMainWidget=new CenterQMainWidget();
     myQMainWidget->show();
-
 
     //后续可使用QMainWindow加入工具栏
 //    QMainWindow myQMainWindow;

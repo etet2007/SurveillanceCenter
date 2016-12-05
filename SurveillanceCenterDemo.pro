@@ -14,19 +14,21 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = SurveillanceCenterDemo
 TEMPLATE = app
 
+INCLUDEPATH +=    E:/Workspace/VisualStudioWorkspace/ClientDLL/ClientDLL \
+G:/curl-7.40.0-devel-mingw64/include \
+E:\LIBRARY\CH-HCNetSDK(Windows64)V5.2.3.3_build20160623\header
 
-INCLUDEPATH +=    E:\Workspace\VisualStudioWorkspace\ClientDLL\ClientDLL \
-                    G:\curl-7.40.0-devel-mingw64\include \
-                    $$PWD\lib\includePath
+
+
 #SOURCE FILES
-SOURCES += main.cpp\
+SOURCES += main.cpp \
     myqgraphicsscene.cpp \
     myqgraphicsview.cpp \
     myqgraphicspolygonitem.cpp \
     cuttingNode.cpp \
     recombinationNode.cpp \
-    centerqmainwidget.cpp
-
+    centerqmainwidget.cpp \
+    NET_SDK_Encode.cpp
 
 
 #HEADER FILES
@@ -36,15 +38,15 @@ HEADERS  +=myqgraphicsscene.h \
     cuttingNode.h \
     ClientDLL.h \
     recombinationNode.h \
-    centerqmainwidget.h
+    centerqmainwidget.h \
+    NET_SDK_Encode.h
 
-
-#LIBS += G:\curl-7.40.0-devel-mingw64\lib64\libssh2.lib \
-#G:\curl-7.40.0-devel-mingw64\lib64\libcurl.lib \
-#E:\Workspace\VisualStudioWorkspace\ClientDLL\x64\Debug\ClientDLL.lib \
-
-LIBS += $$PWD\lib\libssh2.lib \
-$$PWD\lib\libcurl.lib \
-$$PWD\lib\ClientDLL.lib \
+# PWD是绝对路径
+LIBS += $$PWD/lib/libssh2.lib \
+$$PWD/lib/libcurl.lib \
+$$PWD/lib/ClientDLL.lib \
 ws2_32.lib \
-wldap32.lib
+wldap32.lib \
+$$PWD/lib/HCNetSDK.lib \
+$$PWD/lib/PlayCtrl.lib
+
