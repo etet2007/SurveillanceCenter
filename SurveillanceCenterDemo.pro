@@ -28,7 +28,9 @@ SOURCES += main.cpp \
     cuttingNode.cpp \
     recombinationNode.cpp \
     centerqmainwidget.cpp \
-    NET_SDK_Encode.cpp
+    NET_SDK_Encode.cpp \
+    qgraphicspixmapitemopenffplay.cpp \
+    logindialog.cpp
 
 
 #HEADER FILES
@@ -39,9 +41,12 @@ HEADERS  +=myqgraphicsscene.h \
     ClientDLL.h \
     recombinationNode.h \
     centerqmainwidget.h \
-    NET_SDK_Encode.h
+    NET_SDK_Encode.h \
+    qgraphicspixmapitemopenffplay.h \
+    logindialog.h
 
-# PWD是绝对路径
+#LIB
+
 LIBS += $$PWD/lib/libssh2.lib \
 $$PWD/lib/libcurl.lib \
 $$PWD/lib/ClientDLL.lib \
@@ -49,4 +54,7 @@ ws2_32.lib \
 wldap32.lib \
 $$PWD/lib/HCNetSDK.lib \
 $$PWD/lib/PlayCtrl.lib
+
+FORMS += \
+    logindialog.ui
 

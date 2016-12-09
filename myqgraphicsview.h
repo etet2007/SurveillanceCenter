@@ -56,13 +56,9 @@ signals:
 
 protected:
     void drawBackground(QPainter * painter, const QRectF & rect);
-
-//    void render(QPainter * painter, const QRectF & target = QRectF(), const QRect & source = QRect(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);//用于截屏
-int heightForWidth( int w );
+    virtual int heightForWidth ( int w ) const ;
 
 private:
-
-
     void MyQGraphicsView::paintEvent(QPaintEvent *event);
     //读取背景图
     void readBackgroundPic();
@@ -92,8 +88,6 @@ private:
 
     QPoint horizontalLine2LeftView;
     QPoint horizontalLine2RightView;
-
-
 };
 
 #endif // BACKGROUNDVIEW_H

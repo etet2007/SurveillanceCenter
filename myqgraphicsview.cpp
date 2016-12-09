@@ -12,10 +12,10 @@
 #include<QBitmap>
 #include <QSizePolicy>
 
-int MyQGraphicsView::heightForWidth( int w ){
-    return w;
+int MyQGraphicsView::heightForWidth(int w) const
+{
+   return w;
 }
-
 MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 {
     m_rotation=0.0;
@@ -28,8 +28,9 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
     setFixedWidth(viewWidth);
     setFixedHeight(viewHeight);
 //暂时还不行
-//    QSizePolicy  tempSizePolicy(sizePolicy());
-//    tempSizePolicy .setHeightForWidth(true);
+//    QSizePolicy  tempSizePolicy=sizePolicy();
+//    QSizePolicy tempSizePolicy(QSizePolicy::Preferred,QSizePolicy::Preferred);
+//    tempSizePolicy.setHeightForWidth(true);
 //    setSizePolicy(tempSizePolicy);
 
     setDragMode(QGraphicsView::ScrollHandDrag);//在View中可以拖动
@@ -76,7 +77,7 @@ void MyQGraphicsView::readBackgroundPic()
     qDebug("empty");
     }
 }
-
+//!获取场景区域
 QString MyQGraphicsView::getViewArea(){
     QPoint zeroPoint(0,0);
     QPointF zeroPointScene = mapToScene(zeroPoint);
@@ -239,8 +240,10 @@ void MyQGraphicsView::drawBackground(QPainter *painter, const QRectF &rect)
 //    qDebug()<<"the point in the middle:"<<mapToScene(width()/2,height()/2);
 //    qDebug()<<"translate:"<<mapToScene(0,0);
 //    qDebug()<<"Scene coord:(100,100)    viewport:"<<mapFromScene(100,100);
-//    qDebug()<<" ";
+    //    qDebug()<<" ";
 }
+
+
 
 void MyQGraphicsView::initBoundary(){
     verticalLine1topView=QPoint(qreal(1920)/tvWidth*viewWidth,0);

@@ -49,6 +49,9 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     myQGraphicsView->setParent(this);//可以自动内存释放
     myQGraphicsView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 
+    QSettings settings("Option.ini", QSettings::IniFormat); // 当前目录的INI文件
+    m_host=settings.value("serverHostUrl","http://192.168.153.174:8001/").toString();
+
     //初始化Url
     cuttingnodePutUrl=m_host+"cuttingnode/";
     recombinationnodePutUrl=m_host+"recombinationnode/";
@@ -63,7 +66,7 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     QGroupBox *mainGroupBox = new QGroupBox(this);
     mainGroupBox->setFixedWidth(250);
 
-    mainGroupBox->setTitle("工具");
+    mainGroupBox->setTitle("工具栏");
     //旋转控件GroupBox
     QGroupBox *rotateGroupBox = new QGroupBox (mainGroupBox);
     rotateGroupBox->setTitle("旋转");
@@ -103,13 +106,13 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 
     //计算按钮
     QPushButton *calcButton = new QPushButton(mainGroupBox);
-    calcButton->setText(tr("生成摄像机参数"));
+    calcButton->setText(tr("生成节点参数"));
     connect(calcButton, SIGNAL(clicked(bool)), this, SLOT(slot_calcTopologicalData()));
 
     //更新按钮
     QPushButton *uploadDataButton = new QPushButton(mainGroupBox);
 
-    uploadDataButton->setText(tr("上传切分节点\n重组节点参数"));
+    uploadDataButton->setText(tr("上传节点参数"));
     connect(uploadDataButton, SIGNAL(clicked(bool)), this, SLOT(slot_upLoadData()));
 
     //上传底图按钮
@@ -118,15 +121,20 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     connect(uploadBackgroundImageButton, SIGNAL(clicked(bool)), this, SLOT(slot_uploadBackgroundImage()));
 
     //图像配准按钮
-    QPushButton *openRegisterDialog = new QPushButton(mainGroupBox);
-    openRegisterDialog->setText("图像配准");
-    connect(openRegisterDialog, SIGNAL(clicked(bool)), this, SLOT(slot_openRegisterDialog()));
+//    QPushButton *openRegisterDialogButton = new QPushButton(mainGroupBox);
+//    openRegisterDialogButton->setText("图像配准");
+//    connect(openRegisterDialogButton, SIGNAL(clicked(bool)), this, SLOT(slot_openRegisterDialog()));
+
 
 //!设置控件的Layout
     //水平Layout 加入view和mainGroupBox
     QHBoxLayout *viewLayout = new QHBoxLayout(this);
     viewLayout->addWidget(myQGraphicsView);
     viewLayout->addWidget(mainGroupBox);
+
+//    QSizePolicy  tempSizePolicy=sizePolicy();
+//    tempSizePolicy.setHeightForWidth(true);
+//    setSizePolicy(tempSizePolicy);
 
     QVBoxLayout *rotateGroupLayout = new QVBoxLayout(rotateGroupBox);
     rotateGroupLayout->addWidget(rotateDial);
@@ -137,16 +145,17 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
     QVBoxLayout *mainGroupLayout = new QVBoxLayout(mainGroupBox);
     mainGroupLayout->addWidget(rotateGroupBox);
     mainGroupLayout->addWidget(scaleGroupBox);
-    mainGroupLayout->addWidget(openRegisterDialog);
+    mainGroupLayout->addWidget(resetButton);
+    mainGroupLayout->addStretch(1);
+//    mainGroupLayout->addWidget(openRegisterDialogButton);//应该转移到menu栏中。
 
     mainGroupLayout->addWidget(queryButton);
     mainGroupLayout->addWidget(cameraListWidget);
+
+    mainGroupLayout->addStretch(1);
     mainGroupLayout->addWidget(uploadBackgroundImageButton);
     mainGroupLayout->addWidget(calcButton);
     mainGroupLayout->addWidget(uploadDataButton);
-
-    mainGroupLayout->addStretch(1);
-    mainGroupLayout->addWidget(resetButton);
 
 
     connect(cameraListWidget,SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),this,SLOT(slot_itemSelected(QListWidgetItem*, QListWidgetItem*)));
@@ -168,16 +177,6 @@ CenterQMainWidget::CenterQMainWidget(QWidget *parent) : QWidget(parent)
 //        recombinationNode->setId(i);
 //        recombinationNodeList.append(recombinationNode);
 //    }
-
-//    QMediaPlayer *player = new QMediaPlayer(this);
-
-//    QGraphicsVideoItem *item = new QGraphicsVideoItem;
-//    player->setVideoOutput(item);
-//    myQGraphicsView->scene()->addItem(item);
-
-//    myQGraphicsView->show();
-//    player->setMedia(QUrl("rtsp://admin:admin@12345@192.168.153.201:554/h264/ch1/main/av_stream"));
-//    player->play();
 
 }
 
@@ -236,23 +235,6 @@ void CenterQMainWidget::slot_requestData()
 //    vectorTest2<<p5<<p6<<p7<<p8;
 //    CuttingNode *camera2=new CuttingNode(2,"129",vectorTest2);
 
-//    //测试收到如下坐标的四边形，转到Camera对象中
-//    QVector<QPointF> vectorTest(0);
-//    QPointF p1(350,100);
-//    QPointF p2(500,0);
-//    QPointF p3(500,200);
-//    QPointF p4(200,200);
-//    vectorTest<<p1<<p2<<p3<<p4;
-//    CuttingNode *camera1=new CuttingNode(1,"192",vectorTest);
-
-//    QVector<QPointF> vectorTest2(0);
-//    QPointF p5(0,0);
-//    QPointF p6(300,0);
-//    QPointF p7(350,99);
-//    QPointF p8(0,200);
-//    vectorTest2<<p5<<p6<<p7<<p8;
-//    CuttingNode *camera2=new CuttingNode(2,"129",vectorTest2);
-
 //    cuttingNodeList<<camera1<<camera2;
 
 //    qDebug()<<camera1->getPolygonItem()->collidesWithItem(camera2->getPolygonItem(),Qt::IntersectsItemShape);
@@ -263,7 +245,6 @@ void CenterQMainWidget::slot_requestData()
 
 //    addItems();
 }
-
 
 //鼠标移动到item上方时，加亮四边形，移到另一个item时，取消加亮上一次加亮的四边形，使用setPen
 void CenterQMainWidget::slot_itemEntered(QListWidgetItem *current)
@@ -324,7 +305,7 @@ void CenterQMainWidget::slot_calcTopologicalData(){
     for(QListIterator<CuttingNode*> iterator(cuttingNodeList);iterator.hasNext();){
         CuttingNode* cuttingNodeTemp=iterator.next();
 
-        //!算法输入数据：摄像机的世界坐标系标定坐标                   世界坐标系 areaWorld
+        //!算法输入数据：摄像机的世界坐标系配置坐标                   世界坐标系 areaWorld
         QVector<QPointF> areaWorld=cuttingNodeTemp->getArea();
 
         //!转换为观察坐标系、视口坐标系，宽高为graphicsView的宽高。    视口坐标系 areaViewport
@@ -564,7 +545,6 @@ void CenterQMainWidget::slot_upLoadData(){
 //            qDebug()<<jsonDocument.toJson();
 
         //!Put 进行更新的代码
-
             networkPutRequest.setUrl(QUrl(cuttingnodePutUrl+QString::number(id)));
             networkPutRequest.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
             networkPutReply=m_pManager->put(networkPutRequest,jsonDocument.toJson());
@@ -727,7 +707,7 @@ void CenterQMainWidget::slot_getCameraFrame(QListWidgetItem* listWidgetItem)
         qDebug()<<"isSucceed";
         QPixmap framePixmap(cameraIp+QString(".jpg"));
         if(!framePixmap.isNull()){
-         QGraphicsPixmapItem* pixmapItem=new QGraphicsPixmapItem(framePixmap);
+         QGraphicsPixmapItemOpenFFplay* pixmapItem=new QGraphicsPixmapItemOpenFFplay(framePixmap,cameraIp);
          CuttingNode* cuttingNodeTemp=cameraToListWidgetItemMap.key(listWidgetItem);
          if(cuttingNodeTemp!=NULL){
 
@@ -741,15 +721,7 @@ void CenterQMainWidget::slot_getCameraFrame(QListWidgetItem* listWidgetItem)
     }
 
 
-    //测试使用ffplay打开视频
-        QProcess *myProcess = new QProcess(parentWidget());
-        QString program = "./ffmpeg/ffplay.exe";
-        QString head="rtsp://admin:admin@12345@";
-        QString tail=":554/h264/ch1/main/av_stream";
-        QStringList arguments;
-        arguments<<head+cameraIp+tail;
-        qDebug()<<arguments;
-        myProcess->start(program,arguments);
+
 }
 
 void CenterQMainWidget::addItems(){

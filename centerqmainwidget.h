@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QNetworkRequest>
 #include "cuttingNode.h"
+#include "qgraphicspixmapitemopenffplay.h"
 
 //前置声明
 class RecombinationNode;
@@ -22,12 +23,12 @@ public:
     explicit CenterQMainWidget(QWidget *parent = 0);    //声明为explicit的构造函数不能在隐式转换中使用。
     ~CenterQMainWidget();
     //电视墙排列
-static int table2d[5][6];
+    static int table2d[5][6];
 
-int calXcloId(qreal x);
-int calYrowId(qreal y);
+    int calXcloId(qreal x);
+    int calYrowId(qreal y);
 signals:
-//槽函数
+    //槽函数
 public slots:
     void slot_requestData();
     void slot_itemEntered(QListWidgetItem* current);
@@ -42,15 +43,15 @@ public slots:
     void slot_recombinationNodeReplyReadyRead();
     void slot_getCameraFrame(QListWidgetItem* listWidgetItem);
 
-
 private:
     //主机IP地址
-    QString m_host="http://192.168.153.174:8001/";
+    QString m_host;
     QString cuttingnodePutUrl;
     QString recombinationnodePutUrl;
 
     //核心：QGraphicsView类
     MyQGraphicsView *myQGraphicsView;
+    //核心：QGraphicsScene类
     MyQGraphicsScene *myQGraphicsScene;
     //1920*1080数组
     QVector<QPoint> vectorStandard;
@@ -90,6 +91,5 @@ private:
     void addItems();
 
 };
-
 
 #endif // MYQMAINWINDOW_H
