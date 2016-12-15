@@ -12,12 +12,17 @@
 #include<QBitmap>
 #include <QSizePolicy>
 
+#if _MSC_VER >= 1600
+#pragma execution_character_set("utf-8")
+#endif
+
 int MyQGraphicsView::heightForWidth(int w) const
 {
    return w;
 }
 MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 {
+    this->scene=scene;
     m_rotation=0.0;
     m_scale=50;
 
@@ -35,13 +40,8 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 
     setDragMode(QGraphicsView::ScrollHandDrag);//在View中可以拖动
     initBoundary();
-    readBackgroundPic();
 
-    m_backgroundPicWidth= backgroundPic.width();
-    m_backgroundPicHeight = backgroundPic.height();
 
-    scene->setSceneRect(0,0,m_backgroundPicWidth,m_backgroundPicHeight);//设置场景边框
-    setScene(scene);
 //    setCacheMode(CacheBackground); //可以提高性能，但是会保存部分像素不进行改变
 
     //设置背景为瓷砖
@@ -65,7 +65,11 @@ MyQGraphicsView::MyQGraphicsView(MyQGraphicsScene *scene)
 //!读取图片
 void MyQGraphicsView::readBackgroundPic()
 {
-    if(!backgroundImage.load( "G://para.bmp" )){
+    if(backgroundImageUrl.isEmpty()||backgroundImageUrl.isEmpty()){
+//        qDebug()<<"backgroundImageUrl errors!";
+    }
+    if(!backgroundImage.load(backgroundImageUrl))
+    {
         QMessageBox msgBox;
         msgBox.setText(tr("读取图片失败"));
         msgBox.exec();
@@ -73,12 +77,20 @@ void MyQGraphicsView::readBackgroundPic()
     }
 
     backgroundPic= QPixmap::fromImage( backgroundImage);//这里可以控制QImage转换成显示Pixmap的尺度
-    if(backgroundPic.isNull()){
+    if(backgroundPic.isNull())
+    {
     qDebug("empty");
     }
+
+    m_backgroundPicWidth= backgroundPic.width();
+    m_backgroundPicHeight = backgroundPic.height();
+
+    scene->setSceneRect(0,0,m_backgroundPicWidth,m_backgroundPicHeight);//设置场景边框
+    setScene(scene);
 }
 //!获取场景区域
-QString MyQGraphicsView::getViewArea(){
+QString MyQGraphicsView::getViewArea()
+{
     QPoint zeroPoint(0,0);
     QPointF zeroPointScene = mapToScene(zeroPoint);
 
@@ -112,9 +124,7 @@ void MyQGraphicsView::copyBackgroundImage()
     //生成每个重组节点的背景图片并上传到服务器。
     //1，取得小屏幕显示区域位置（先形成观察坐标系再转世界坐标系，使用Rect就不用考虑缩放）
     //2，裁剪似乎暂时只有 QImage::copy取出某图像的某个矩形区域，无法取出旋转了的区域
-
-    //会卡，旋转时失效，因为现在只通过世界坐标系两点。
-
+    //!使用QProgressDialog
     QProgressDialog progress("Copying images...", "Abort Copy", 0, 12, this);
     progress.setWindowModality(Qt::WindowModal);
     progress.setMinimumDuration(0);
@@ -122,46 +132,46 @@ void MyQGraphicsView::copyBackgroundImage()
 
     //测试旋转
     QImage imageTransformed=backgroundImage.transformed(roateMat,Qt::SmoothTransformation);
-//    qDebug()<<imageTransformed.width()<<imageTransformed.height();
-
-    QMatrix tureMatrix=QImage::trueMatrix(roateMat,backgroundImage.width(),backgroundImage.height());//必须使用tureMatrix才不会出错
-    //验证对tureMatrix理解的正确性，使用roateMat映射图片的四点坐标后，求外包矩形左上角。
-    QRect rectTransformed =roateMat.mapRect(QRect(0,0,backgroundImage.width(),backgroundImage.height()));
-    qDebug()<<"topleft"<<rectTransformed.topLeft();
-    qDebug()<<"tureMatrix "<<tureMatrix;
-
+    qDebug()<<imageTransformed.width()<<imageTransformed.height();
     //保存旋转后的图片
 //    imageTransformed.save("imageTransformed.jpg");
 
+    //!计算图片真实变换矩阵tureMatrix
+    QMatrix tureMatrix=QImage::trueMatrix(roateMat,backgroundImage.width(),backgroundImage.height());//必须使用tureMatrix才不会出错
+    //验证对tureMatrix理解的正确性，使用roateMat映射图片的四点坐标后，求外包矩形左上角。
+//    QRect rectTransformed =roateMat.mapRect(QRect(0,0,backgroundImage.width(),backgroundImage.height()));
+//    qDebug()<<"topleft"<<rectTransformed.topLeft();
+//    qDebug()<<"tureMatrix "<<tureMatrix;
+
     bool isSucceed;
     int count=1;
-    for(int j=0;j<horizontalLineList.size()-1;j++){
-        for(int i=0;i<verticalLineList.size()-1;i++){
-            //电视墙边界
+    for(int j=0;j<horizontalLineList.size()-1;j++)
+    {
+        for(int i=0;i<verticalLineList.size()-1;i++)
+        {
+            //!电视墙边界
             QPoint topLeftPoint(verticalLineList.at(i)/ratio,horizontalLineList.at(j)/ratio);
             QPoint bottomRightPoint(verticalLineList.at(i+1)/ratio,horizontalLineList.at(j+1)/ratio);
-            //转换到世界坐标系
+            //!转换到世界坐标系
             QPointF topLeftPointScene = mapToScene(topLeftPoint);
             QPointF bottomRightPointScene = mapToScene(bottomRightPoint);
 //            qDebug()<<"topLeftPointScene,bottomRightPointScene"<<topLeftPointScene<<bottomRightPointScene;
 //            qDebug()<<mapToScene();
 
             //old code
-            QRect rect;
-            rect.setTopLeft(topLeftPointScene.toPoint());
-            rect.setBottomRight(bottomRightPointScene.toPoint());
-            QImage patch;
-            patch=backgroundImage.copy(rect);//使用copy进行处理的是背景图
-            QString nameStr="old"+QString::number(count).append(".jpg");
-            patch=patch.scaled(1920,1080);
-            isSucceed= patch.save(nameStr,"JPG",100);
+//            QRect rect;
+//            rect.setTopLeft(topLeftPointScene.toPoint());
+//            rect.setBottomRight(bottomRightPointScene.toPoint());
 
+//            QImage patch;
+//            patch=backgroundImage.copy(rect);//使用copy进行处理的是背景图
+//            QString nameStr="old"+QString::number(count).append(".jpg");
+//            patch=patch.scaled(1920,1080);
+//            isSucceed= patch.save(nameStr,"JPG",100);
 
             QRect rectTransformed;
             rectTransformed.setTopLeft(tureMatrix.map(topLeftPointScene.toPoint()));
             rectTransformed.setBottomRight(tureMatrix.map(bottomRightPointScene.toPoint()));
-//            qDebug()<<matrix();
-//            qDebug()<<rectTransformed;
 
             QImage patchTranformed=imageTransformed.copy(rectTransformed);
             QString nameStrTranformed=QString::number(count).append(".jpg");
@@ -173,7 +183,8 @@ void MyQGraphicsView::copyBackgroundImage()
             patchTranformed=patchTranformed.scaled(1920,1080,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
             isSucceed= patchTranformed.save(nameStrTranformed,"JPG",100);
 
-            if(!isSucceed){
+            if(!isSucceed)
+            {
                 QMessageBox msgBox;
                 msgBox.setText(tr("保存失败"));
                 msgBox.exec();
@@ -198,10 +209,12 @@ void MyQGraphicsView::changeScale(int value)
     scaleFactor;
     qreal factor=1.05;
 
-    if(value>m_scale){
+    if(value>m_scale)
+    {
         scaleFactor=pow(factor,(value-m_scale));
     }
-    else{
+    else
+    {
         scaleFactor=pow(1/factor,(m_scale-value));
     }
     scale(scaleFactor,scaleFactor);
@@ -274,7 +287,8 @@ void MyQGraphicsView::initBoundary(){
     horizontalLineList.append(horizontalLine4);
 }
 
-void MyQGraphicsView::paintEvent(QPaintEvent *event){
+void MyQGraphicsView::paintEvent(QPaintEvent *event)
+{
     QGraphicsView::paintEvent(event);
 
     //画边界的新函数

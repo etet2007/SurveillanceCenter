@@ -1,4 +1,4 @@
-#ifndef RECOMBINATIONNODE_H
+﻿#ifndef RECOMBINATIONNODE_H
 #define RECOMBINATIONNODE_H
 
 #include<QString>
@@ -13,6 +13,7 @@ public:
     RecombinationNode();
     ~RecombinationNode();
 
+    //toploMat
     QList<QString> receivedList()const;
     void setReceivedList(const QList<QString> &receivedList);
     void appendReceivedList(QString &);
@@ -33,13 +34,16 @@ public:
     QString getFourPointsList() const;
     void appendFourPointsList(QVector<QPointF> fourPoints);
 private:
-    int m_id;  //当前ID编号
-    QString m_ip;//重组节点ip地址
-    QList<QString> m_receivedList; //重组节点接收列表，每个元素为切分节点IP
-    QString m_position;//不用
-
+    //ID
+    int m_id;
+    //重组节点ip地址
+    QString m_ip;
+    //重组节点接收列表，每个元素为切分节点IP
+    QList<QString> m_receivedList;
+    //位置信息
+    QString m_position;
+    //测试使用的四点坐标
     QString fourPointsList;
-
 };
 
 #endif // RECOMBINATIONNODE_H

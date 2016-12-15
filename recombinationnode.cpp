@@ -1,4 +1,4 @@
-#include "recombinationNode.h"
+﻿#include "recombinationNode.h"
 
 RecombinationNode::RecombinationNode()
 {
@@ -65,7 +65,8 @@ void RecombinationNode::appendPosition(QPointF &point)
 QString RecombinationNode::getReceivedListString()
 {
     QString result;
-    for(QListIterator<QString> iterator(m_receivedList);iterator.hasNext();){
+    for(QListIterator<QString> iterator(m_receivedList);iterator.hasNext();)
+    {
 //        QString next=iterator.next();
         result.append(iterator.next()).append(" ");
     }
@@ -87,9 +88,11 @@ QString RecombinationNode::getFourPointsList() const
 void RecombinationNode::appendFourPointsList(QVector<QPointF> fourPoints)
 {
 
-    for (int i = 0; i < fourPoints.size(); ++i) {
+    for (int i = 0; i < fourPoints.size(); ++i)
+    {
         QPointF pointTemp=fourPoints[i];
-        if(!fourPointsList.isEmpty()){
+        if(!fourPointsList.isEmpty())
+        {
             if(i==0)
                 fourPointsList.append(";");
             else

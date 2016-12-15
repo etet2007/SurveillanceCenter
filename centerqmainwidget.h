@@ -45,7 +45,7 @@ public slots:
 
 private:
     //主机IP地址
-    QString m_host;
+    QString m_serverIp;
     QString cuttingnodePutUrl;
     QString recombinationnodePutUrl;
 
@@ -78,7 +78,7 @@ private:
     QNetworkReply * recombinationNodeReply;
 
     QString recombinationNodeUrl;
-
+    QBrush itemSelectedBrush;
     QTimer* m_pTimer; //请求超时计时器
 
     //计算矩形相交区域

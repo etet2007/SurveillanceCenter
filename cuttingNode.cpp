@@ -1,4 +1,4 @@
-#include "cuttingNode.h"
+﻿#include "cuttingNode.h"
 
 CuttingNode::CuttingNode()
 {
@@ -92,12 +92,12 @@ void CuttingNode::setCuttingYModelList(const QList<qreal> &value)
 }
 QList<int> CuttingNode::getMat() const
 {
-    return mat;
+    return toploMat;
 }
 
 void CuttingNode::setMat(const QList<int> &value)
 {
-    mat = value;
+    toploMat = value;
 }
 int CuttingNode::getMatrixRow() const
 {
@@ -121,10 +121,12 @@ void CuttingNode::setMatrixCol(int value)
 QString CuttingNode::getCuttingXModelListString()
 {
     QString str;
-    for(QListIterator<qreal> iterator(cuttingXModelList);iterator.hasNext();){
+    for(QListIterator<qreal> iterator(cuttingXModelList);iterator.hasNext();)
+    {
 
         str.append(QString::number(iterator.next()));
-        if(iterator.hasNext()){
+        if(iterator.hasNext())
+        {
             str.append(" ");
         }
     }
@@ -134,10 +136,12 @@ QString CuttingNode::getCuttingXModelListString()
 QString CuttingNode::getCuttingYModelListString()
 {
     QString str;
-    for(QListIterator<qreal> iterator(cuttingYModelList);iterator.hasNext();){
+    for(QListIterator<qreal> iterator(cuttingYModelList);iterator.hasNext();)
+    {
 
         str.append(QString::number(iterator.next()));
-        if(iterator.hasNext()){
+        if(iterator.hasNext())
+        {
             str.append(" ");
         }
     }
@@ -147,10 +151,12 @@ QString CuttingNode::getCuttingYModelListString()
 QString CuttingNode::getMatString()
 {
     QString str;
-    for(QListIterator<int> iterator(mat);iterator.hasNext();){
+    for(QListIterator<int> iterator(toploMat);iterator.hasNext();)
+    {
 
         str.append(QString::number(iterator.next()));
-        if(iterator.hasNext()){
+        if(iterator.hasNext())
+        {
             str.append(" ");
         }
     }
@@ -173,12 +179,3 @@ QString CuttingNode::getTransformMatString()
     return str;
 
 }
-
-
-
-
-
-
-
-
-

@@ -24,22 +24,24 @@ int main(int argc, char *argv[])
     qApplication.setFont(font);
 
     QPixmap pixmap("splash.jpg");
-    QSplashScreen splash(pixmap);
+    QSplashScreen splash(pixmap, Qt::WindowStaysOnTopHint);
     splash.show();
     qApplication.processEvents();
+    qApplication.setWindowIcon(QIcon(pixmap));
 
-//    LoginDialog loginDialog;
-//    if(loginDialog.exec()==QDialog::Accepted)
-//    {
-//        CenterQMainWidget *myQMainWidget=new CenterQMainWidget();
-//        myQMainWidget->show();
-//    }else{
-//        splash.finish(&loginDialog);
-//        return 0;
-//    }
+    LoginDialog loginDialog;
+    if(loginDialog.exec()==QDialog::Accepted)
+    {
+        CenterQMainWidget *myQMainWidget=new CenterQMainWidget();
+        myQMainWidget->show();
+    }else{
+        splash.finish(&loginDialog);
+        return 0;
+    }
 
-    CenterQMainWidget *myQMainWidget=new CenterQMainWidget();
-    myQMainWidget->show();
+//    CenterQMainWidget *myQMainWidget=new CenterQMainWidget();
+//    myQMainWidget->show();
+
     //使用QMainWindow加入工具栏
 //    QMainWindow myQMainWindow;
 //    myQMainWindow.setCentralWidget(myQMainWidget);

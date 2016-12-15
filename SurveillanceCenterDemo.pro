@@ -18,7 +18,7 @@ INCLUDEPATH +=    E:/Workspace/VisualStudioWorkspace/ClientDLL/ClientDLL \
 G:/curl-7.40.0-devel-mingw64/include \
 E:\LIBRARY\CH-HCNetSDK(Windows64)V5.2.3.3_build20160623\header
 
-
+RC_ICONS = wall.ico
 
 #SOURCE FILES
 SOURCES += main.cpp \
@@ -46,7 +46,6 @@ HEADERS  +=myqgraphicsscene.h \
     logindialog.h
 
 #LIB
-
 LIBS += $$PWD/lib/libssh2.lib \
 $$PWD/lib/libcurl.lib \
 $$PWD/lib/ClientDLL.lib \
@@ -58,3 +57,4 @@ $$PWD/lib/PlayCtrl.lib
 FORMS += \
     logindialog.ui
 
+UI_DIR=./UI

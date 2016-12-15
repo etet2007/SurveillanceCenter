@@ -24,7 +24,7 @@ LoginDialog::~LoginDialog()
 
 void LoginDialog::on_pushButton_clicked()
 {
-    qDebug()<<"accepted.";
+//    qDebug()<<"accepted.";
     if(this->ui->usernameLineEdit->text().trimmed()== tr("admin") &&
             this->ui->passwordLineEdit->text().trimmed()==tr("admin"))
     {

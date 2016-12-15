@@ -40,8 +40,10 @@ public:
     static const int horizontalLine4=3240;
 
     void copyBackgroundImage();
+    void readBackgroundPic();
 
     QMatrix roateMat;
+    QString backgroundImageUrl;
 public slots:
     //旋转
     void changeRotation(int rotation);
@@ -59,12 +61,14 @@ protected:
     virtual int heightForWidth ( int w ) const ;
 
 private:
+    MyQGraphicsScene *scene;
     void MyQGraphicsView::paintEvent(QPaintEvent *event);
     //读取背景图
-    void readBackgroundPic();
+
     void initBoundary();
 
     QImage backgroundImage;
+
     QPixmap backgroundPic;//QPixmap
     int m_backgroundPicWidth;
     int m_backgroundPicHeight;
