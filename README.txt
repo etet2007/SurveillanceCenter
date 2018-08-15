@@ -1,10 +1,11 @@
-³ÌĞò½á¹¹£º
-main.cpp£º³ÌĞòÈë¿Ú¡£Ê¹ÓÃQApplication¶ÔÏóÉè¶¨×ÖÌå£¬ÏÔÊ¾³ÌĞòÖ÷Ò³Ãæ¶ÔÏóMyQMainWidget¡£
 
-recombinationNode.h /.cpp£ºÖØ×é½ÚµãÄ£ĞÍÀàRecombinationNode¡£
+# ç¨‹åºç»“æ„ï¼š
+main.cppï¼šç¨‹åºå…¥å£ã€‚ä½¿ç”¨QApplicationå¯¹è±¡è®¾å®šå­—ä½“ï¼Œæ˜¾ç¤ºç¨‹åºä¸»é¡µé¢å¯¹è±¡MyQMainWidgetã€‚
 
-cuttingNode.h /.cpp£ºÇĞ·Ö½ÚµãÄ£ĞÍÀàCuttingNode¡£
+recombinationNode.h /.cppï¼šé‡ç»„èŠ‚ç‚¹æ¨¡å‹ç±»RecombinationNodeã€‚
 
-myQGraphicsView.h /.cpp£ºÍ¼ĞÎÏÔÊ¾¿Ø¼şÀàMyQGraphicsView
+cuttingNode.h /.cppï¼šåˆ‡åˆ†èŠ‚ç‚¹æ¨¡å‹ç±»CuttingNodeã€‚
 
-myqmainwidget.h /.cpp£ºÖ÷³ÌĞò½çÃæ¿Ø¼şÀàMyQMainWidget¡£
+myQGraphicsView.h /.cppï¼šå›¾å½¢æ˜¾ç¤ºæ§ä»¶ç±»MyQGraphicsView
+
+myqmainwidget.h /.cppï¼šä¸»ç¨‹åºç•Œé¢æ§ä»¶ç±»MyQMainWidgetã€‚
